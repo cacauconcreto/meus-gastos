@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planejamento — Meus Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="app">
+
+{% macro atalhos() %}
+<div class="atalhos">
+    <span>Usar:</span>
+    {% for pct in (50, 70, 100) %}
+    <button type="button" class="chip" data-valor="{{ '%.2f'|format(disponivel * pct / 100) }}"
+            onclick="this.closest('form').valor.value = this.dataset.valor">{{ pct }}%</button>
+    {% endfor %}
+    <span class="atalhos-info">do que você tem (R$ {{ disponivel|brl }})</span>
+</div>
+{% endmacro %}
+
+{% macro meta(l) %}
+<div class="meta">
+    <div class="meta-topo">
+        <strong>{{ l.nome }}</strong>
+        <span class="meta-valores"><b>R$ {{ l.gasto|brl }}</b> / R$ {{ l.limite|brl }}</span>
+        <form method="POST" action="{{ url_for('apagar_limite') }}">
+            <input type="hidden" name="categoria" value="{{ l.chave }}">
+            <button type="submit" class="btn-icone-sutil" aria-label="Remover limite de {{ l.nome }}">×</button>
+        </form>
+    </div>
+    <div class="barra" role="progressbar" aria-label="Gasto com {{ l.nome }}"
+         aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ '%.0f'|format(l.pct) }}">
+        <div class="barra-progresso {{ l.estado }}" style="width: {{ '%.1f'|format(l.pct) }}%;"></div>
+    </div>
+    <div class="meta-rodape">
+        <span class="status {{ l.estado }}">{{ '%.0f'|format(l.pct_real) }}% usado</span>
+        {% if l.estado == 'estourou' %}
+            <span class="texto-erro">Passou R$ {{ (l.gasto - l.limite)|brl }}</span>
+        {% else %}
+            <span>Restam R$ {{ (l.limite - l.gasto)|brl }}</span>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+<header class="dashboard-topo">
+    <div class="perfil">
+        <div class="avatar">{{ usuario["nome"][0].upper() }}</div>
+        <div>
+            <span>Organização</span>
+            <strong>Planejamento</strong>
+        </div>
+    </div>
+</header>
+
+<main>
+
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% for categoria_msg, texto in mensagens %}
+        <div class="flash {{ categoria_msg }}" role="status">{{ texto }}</div>
+    {% endfor %}
+{% endwith %}
+
+<div class="pagina-header">
+    <span>{{ mes_nome }}</span>
+    <h1>Planejamento do mês</h1>
+</div>
+
+<!-- ===== LIMITE DO MÊS ===== -->
+<section class="card hero-limite form-padrao">
+{% if total %}
+    {% set restante = total.limite - total.gasto %}
+    {% set guardado = saldo_total - (restante if restante > 0 else 0) %}
+    {% set excesso_previsto = total.gasto + fixas_pendentes - total.limite %}
+    {% set pct_disp = (total.limite / disponivel * 100) if disponivel > 0 else 0 %}
+
+    <div class="hero-topo">
+        <span>Limite do mês</span>
+        <span class="status {{ total.estado }}">{{ '%.0f'|format(total.pct_real) }}% usado</span>
+    </div>
+
+    <strong class="hero-valor">R$ {{ total.gasto|brl }} <small>de R$ {{ total.limite|brl }}</small></strong>
+    {% if disponivel > 0 %}
+        <p class="dica" style="margin-top:6px">Seu limite é {{ '%.0f'|format(pct_disp) }}% do dinheiro que você tem para o mês.</p>
+    {% endif %}
+
+    <div class="barra" role="progressbar" aria-label="Gasto total do mês"
+         aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ '%.0f'|format(total.pct) }}">
+        <div class="barra-progresso {{ total.estado }}" style="width: {{ '%.1f'|format(total.pct) }}%;"></div>
+    </div>
+
+    <div class="mini-stats">
+        <div><span>Gasto</span><strong>R$ {{ total.gasto|brl }}</strong></div>
+        <div>
+            <span>{{ 'Passou' if restante < 0 else 'Restante' }}</span>
+            <strong class="{{ 'neg' if restante < 0 }}">R$ {{ restante|abs|brl }}</strong>
+        </div>
+        <div><span>Fixas a pagar</span><strong>R$ {{ fixas_pendentes|brl }}</strong></div>
+    </div>
+
+    <div class="faixa-saldo">
+        <div><span>Em contas agora</span><strong>R$ {{ saldo_total|brl }}</strong></div>
+        <div>
+            <span>Sobra se gastar até o limite</span>
+            <strong class="{{ 'neg' if guardado < 0 }}">{{ "−" if guardado < 0 }}R$ {{ guardado|abs|brl }}</strong>
+        </div>
+    </div>
+
+    {% if total.limite > disponivel %}
+        <p class="aviso-previsao">Seu limite (R$ {{ total.limite|brl }}) é maior que o dinheiro que você tem para o mês (R$ {{ disponivel|brl }}). Reduza o limite para ele caber no seu saldo.</p>
+    {% elif excesso_previsto > 0 and restante >= 0 %}
+        <p class="aviso-previsao">Atenção: pagando as despesas fixas que faltam, você ultrapassa o limite em R$ {{ excesso_previsto|brl }}.</p>
+    {% endif %}
+
+    <details class="expansivel">
+        <summary>Editar limite</summary>
+        <div class="expansivel-corpo">
+            <form method="POST" action="{{ url_for('definir_limite') }}">
+                <input type="hidden" name="categoria" value="*">
+                <div class="form-linha">
+                    <input type="number" name="valor" step="0.01" min="0" max="{{ '%.2f'|format(disponivel) if disponivel > 0 }}"
+                           inputmode="decimal" value="{{ '%.2f'|format(total.limite) }}" aria-label="Limite total do mês (R$)">
+                    <button type="submit" class="btn-principal">Atualizar</button>
+                </div>
+                {{ atalhos() }}
+                <p class="dica">O limite não pode passar do que você tem. Deixe em branco para remover.</p>
+            </form>
+        </div>
+    </details>
+{% else %}
+    <div class="hero-topo"><span>Limite do mês</span></div>
+    <strong class="hero-valor">Quanto você quer gastar?</strong>
+    {% if disponivel > 0 %}
+        <p class="dica" style="margin:6px 0 18px">Você tem <b>R$ {{ disponivel|brl }}</b> para o mês. Defina quanto quer gastar disso e acompanhe pela barra. O resto fica guardado.</p>
+    {% else %}
+        <p class="dica" style="margin:6px 0 18px">Adicione saldo às suas contas para poder definir um limite.</p>
+    {% endif %}
+    <form method="POST" action="{{ url_for('definir_limite') }}">
+        <input type="hidden" name="categoria" value="*">
+        <div class="form-linha">
+            <input type="number" name="valor" step="0.01" min="0.01" max="{{ '%.2f'|format(disponivel) if disponivel > 0 }}"
+                   inputmode="decimal" placeholder="Ex.: 3000,00" aria-label="Limite total do mês (R$)" required>
+            <button type="submit" class="btn-principal">Definir</button>
+        </div>
+        {% if disponivel > 0 %}{{ atalhos() }}{% endif %}
+    </form>
+{% endif %}
+</section>
+
+<!-- ===== LIMITES POR CATEGORIA ===== -->
+<section class="card form-padrao">
+    <div class="section-titulo">
+        <div><span>Controle por tipo de gasto</span><h2>Limites por categoria</h2></div>
+    </div>
+
+    {% for l in por_categoria %}{{ meta(l) }}
+    {% else %}
+        <div class="vazio-mini">
+            <strong>Nenhum limite por categoria</strong>
+            <span>Ex.: no máximo R$ 600 em Alimentação.</span>
+        </div>
+    {% endfor %}
+
+    <details class="expansivel">
+        <summary>+ Definir limite</summary>
+        <div class="expansivel-corpo">
+            <form method="POST" action="{{ url_for('definir_limite') }}">
+                <label for="lim-cat">Categoria</label>
+                <select id="lim-cat" name="categoria">
+                    {% for c in categorias_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                </select>
+                <label for="lim-valor">Limite mensal (R$)</label>
+                <input type="number" id="lim-valor" name="valor" step="0.01" min="0.01" inputmode="decimal" required>
+                <button type="submit" class="btn-principal btn-full">Salvar limite</button>
+                <p class="dica">Escolher uma categoria que já tem limite atualiza o valor.</p>
+            </form>
+        </div>
+    </details>
+</section>
+
+<!-- ===== DESPESAS FIXAS ===== -->
+<section class="card form-padrao" id="fixas">
+    <div class="section-titulo">
+        <div>
+            <span>{% if fixas_pendentes %}Ainda a pagar: R$ {{ fixas_pendentes|brl }}{% else %}Todo mês{% endif %}</span>
+            <h2>Despesas fixas</h2>
+        </div>
+    </div>
+
+    <div class="lista-fixas">
+    {% for f in fixas %}
+        <div class="fixa fixa-{{ f.estado }}">
+            <div class="fixa-data">
+                <strong>{{ '%02d'|format(f.venc.day) }}</strong>
+                <small>dia</small>
+            </div>
+
+            <div class="fixa-info">
+                <strong>{{ f.descricao }}</strong>
+                <span class="meta-txt">{{ f.categoria }} · {{ f.conta }}</span>
+                <span class="status {{ f.estado }}">{{ f.texto }}</span>
+            </div>
+
+            <div class="fixa-direita">
+                <strong class="valor">R$ {{ f.valor|brl }}</strong>
+                <div class="fixa-acoes">
+                    {% if not f.paga %}
+                    <form method="POST" action="{{ url_for('pagar_fixa_rota', fixa_id=f.id) }}">
+                        <button type="submit" class="btn-pequeno">Pagar</button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('apagar_fixa', fixa_id=f.id) }}"
+                          onsubmit="return confirm('Remover {{ f.descricao|e }}? Pagamentos já feitos continuam nas transações.')">
+                        <button type="submit" class="btn-icone-sutil" aria-label="Remover {{ f.descricao }}">×</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="vazio-mini">
+            <strong>Nenhuma despesa fixa</strong>
+            <span>Cadastre o que vence todo mês: Spotify, internet, aluguel...</span>
+        </div>
+    {% endfor %}
+    </div>
+
+    <details class="expansivel">
+        <summary>+ Nova despesa fixa</summary>
+        <div class="expansivel-corpo">
+            <form method="POST" action="{{ url_for('nova_fixa') }}">
+                <label for="fx-desc">Descrição</label>
+                <input type="text" id="fx-desc" name="descricao" maxlength="60" placeholder="Ex.: Spotify" required>
+
+                <div class="duas-colunas">
+                    <div>
+                        <label for="fx-valor">Valor (R$)</label>
+                        <input type="number" id="fx-valor" name="valor" step="0.01" min="0.01" inputmode="decimal" required>
+                    </div>
+                    <div>
+                        <label for="fx-dia">Vence todo dia</label>
+                        <input type="number" id="fx-dia" name="dia" min="1" max="31" placeholder="20" required>
+                    </div>
+                </div>
+
+                <div class="duas-colunas">
+                    <div>
+                        <label for="fx-cat">Categoria</label>
+                        <select id="fx-cat" name="categoria">
+                            {% for c in categorias_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="fx-conta">Paga pela conta</label>
+                        <select id="fx-conta" name="conta">
+                            {% for c in contas_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-principal btn-full">Adicionar despesa fixa</button>
+                <p class="dica">Ao tocar em "Pagar", o valor vira uma despesa do mês na conta escolhida e entra nos limites.</p>
+            </form>
+        </div>
+    </details>
+</section>
+
+</main>
+
+{% include '_menu.html' %}
+
+</div>
+</body>
+</html>

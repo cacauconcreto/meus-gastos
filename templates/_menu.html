@@ -1,0 +1,18 @@
+<nav class="menu-inferior" aria-label="Navegação principal">
+    <a href="{{ url_for('dashboard') }}" {% if request.endpoint == 'dashboard' %}class="ativo" aria-current="page"{% endif %}>
+        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+        <span>Principal</span>
+    </a>
+    <a href="{{ url_for('transacoes') }}" {% if request.endpoint == 'transacoes' %}class="ativo" aria-current="page"{% endif %}>
+        <svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+        <span>Transações</span>
+    </a>
+    <a href="{{ url_for('planejamento') }}" {% if request.endpoint == 'planejamento' %}class="ativo" aria-current="page"{% endif %}>
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+        <span>Planejamento</span>
+    </a>
+    <a href="{{ url_for('mais') }}" {% if request.endpoint == 'mais' %}class="ativo" aria-current="page"{% endif %}>
+        <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg>
+        <span>Mais</span>
+    </a>
+</nav>

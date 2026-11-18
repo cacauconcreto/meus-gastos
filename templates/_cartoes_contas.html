@@ -1,0 +1,96 @@
+<div class="cartoes-wrap">
+    <button type="button" class="cartoes-seta esq" id="cartoes-esq" aria-label="Cartão anterior">‹</button>
+    <button type="button" class="cartoes-seta dir" id="cartoes-dir" aria-label="Próximo cartão">›</button>
+
+    <section class="cartoes" id="cartoes" aria-label="Suas contas">
+        {% for c in contas_lista %}
+        <article class="cartao cartao-{{ loop.index0 % 4 }}">
+            <div class="cartao-topo">
+                <div>
+                    <strong>{{ c.nome }}</strong>
+                    <span>{{ tipos_conta.get(c.tipo, c.tipo) }}</span>
+                </div>
+                <svg class="cartao-chip" viewBox="0 0 32 24" aria-hidden="true">
+                    <rect x="1" y="1" width="30" height="22" rx="5"/>
+                    <path d="M1 8h30M1 16h30M11 1v22M21 1v22"/>
+                </svg>
+            </div>
+
+            <div class="cartao-saldo">
+                <small>Saldo disponível</small>
+                <strong class="{{ 'negativo' if c.saldo < 0 }}">{{ "−" if c.saldo < 0 }}R$ {{ c.saldo|abs|brl }}</strong>
+            </div>
+
+            <div class="cartao-rodape">
+                <small>Titular</small>
+                <span>{{ usuario["nome"] }}</span>
+            </div>
+        </article>
+        {% endfor %}
+
+        <a class="cartao cartao-novo" href="{{ url_for('contas') }}#nova-conta" draggable="false">
+            <span class="mais-icone" aria-hidden="true">+</span>
+            <strong>Adicionar conta</strong>
+        </a>
+    </section>
+</div>
+
+<div class="cartoes-pontos" id="cartoes-pontos" aria-hidden="true"></div>
+
+<script>
+(function () {
+    const trilho = document.getElementById("cartoes");
+    if (!trilho) return;
+
+    const cartoes = Array.from(trilho.querySelectorAll(".cartao"));
+    const pontos = document.getElementById("cartoes-pontos");
+    const esq = document.getElementById("cartoes-esq");
+    const dir = document.getElementById("cartoes-dir");
+    const passo = () => cartoes[0].getBoundingClientRect().width + 14;
+
+    cartoes.forEach((_, i) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.tabIndex = -1;
+        b.addEventListener("click", () => trilho.scrollTo({ left: i * passo(), behavior: "smooth" }));
+        pontos.appendChild(b);
+    });
+
+    function atualizar() {
+        const fim = trilho.scrollLeft + trilho.clientWidth >= trilho.scrollWidth - 2;
+        const atual = fim ? cartoes.length - 1 : Math.round(trilho.scrollLeft / passo());
+        Array.from(pontos.children).forEach((b, i) => b.classList.toggle("ativo", i === atual));
+        esq.disabled = trilho.scrollLeft <= 2;
+        dir.disabled = fim;
+    }
+
+    esq.addEventListener("click", () => trilho.scrollBy({ left: -passo(), behavior: "smooth" }));
+    dir.addEventListener("click", () => trilho.scrollBy({ left: passo(), behavior: "smooth" }));
+    trilho.addEventListener("scroll", atualizar, { passive: true });
+    window.addEventListener("resize", atualizar);
+
+    // Arrastar com o mouse (no celular o dedo já rola sozinho)
+    let arrastando = false, moveu = false, x0 = 0, s0 = 0;
+
+    trilho.addEventListener("pointerdown", e => {
+        if (e.pointerType !== "mouse") return;
+        arrastando = true; moveu = false; x0 = e.clientX; s0 = trilho.scrollLeft;
+    });
+    window.addEventListener("pointermove", e => {
+        if (!arrastando) return;
+        const dx = e.clientX - x0;
+        if (Math.abs(dx) > 4) { moveu = true; trilho.classList.add("arrastando"); }
+        trilho.scrollLeft = s0 - dx;
+    });
+    window.addEventListener("pointerup", () => {
+        if (!arrastando) return;
+        arrastando = false;
+        trilho.classList.remove("arrastando");
+    });
+    trilho.addEventListener("click", e => {
+        if (moveu) { e.preventDefault(); e.stopPropagation(); moveu = false; }
+    }, true);
+
+    atualizar();
+})();
+</script>

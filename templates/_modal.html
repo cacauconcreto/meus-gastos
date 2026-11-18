@@ -1,0 +1,45 @@
+<button type="button" class="botao-add" onclick="abrirModal()" aria-label="Adicionar transação">+</button>
+
+<!-- MODAL -->
+<div id="modal" class="modal">
+    <div class="modal-conteudo" role="dialog" aria-modal="true" aria-labelledby="titulo-modal">
+        <button type="button" class="fechar" onclick="fecharModal()" aria-label="Fechar">×</button>
+
+        <p class="pequeno">Nova movimentação</p>
+        <h2 id="titulo-modal">Adicionar transação</h2>
+
+        <form method="POST" action="{{ url_for('nova_transacao') }}">
+            <div class="tipo">
+                <label><input type="radio" name="tipo" value="despesa" checked><span>Despesa</span></label>
+                <label><input type="radio" name="tipo" value="receita"><span>Receita</span></label>
+            </div>
+
+            <input type="text" name="descricao" placeholder="Descrição" maxlength="80"
+                   autocomplete="off" required>
+
+            <input type="number" name="valor" step="0.01" min="0.01" inputmode="decimal"
+                   placeholder="Valor (R$)" required>
+
+            <select name="categoria" required>
+                {% for c in categorias_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+            </select>
+
+            <select name="conta" required>
+                {% for c in contas_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+            </select>
+
+            <input type="date" name="data" value="{{ hoje }}" required>
+
+            <button type="submit" class="btn-principal btn-full">Salvar transação</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById("modal");
+    const abrirModal = () => modal.classList.add("aberto");
+    const fecharModal = () => modal.classList.remove("aberto");
+
+    modal.addEventListener("click", e => { if (e.target === modal) fecharModal(); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") fecharModal(); });
+</script>

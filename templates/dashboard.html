@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="app">
+
+<header class="dashboard-topo">
+    <div class="perfil">
+        <div class="avatar">{{ usuario["nome"][0].upper() }}</div>
+        <div>
+            <span>Olá,</span>
+            <strong>{{ usuario["nome"].split()[0] }}</strong>
+        </div>
+    </div>
+
+    <div class="acoes-topo">
+        <a href="{{ url_for('logout') }}" class="icone-btn" aria-label="Sair">
+            <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+        </a>
+    </div>
+</header>
+
+<nav class="mes-navegacao" aria-label="Escolher mês">
+    <a href="{{ url_for('dashboard', mes=mes_anterior) }}" aria-label="Mês anterior">‹</a>
+    <strong>{{ mes_nome }}</strong>
+    {% if mes_proximo %}
+        <a href="{{ url_for('dashboard', mes=mes_proximo) }}" aria-label="Próximo mês">›</a>
+    {% else %}
+        <a href="#" aria-disabled="true" aria-label="Próximo mês">›</a>
+    {% endif %}
+</nav>
+
+<main>
+
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% for categoria_msg, texto in mensagens %}
+        <div class="flash {{ categoria_msg }}" role="status">{{ texto }}</div>
+    {% endfor %}
+{% endwith %}
+
+<!-- SALDO -->
+<section class="saldo-card">
+    <div class="saldo-topo"><span>Saldo total em contas</span></div>
+    <h1>{{ "−" if saldo_contas < 0 }}R$ {{ saldo_contas|abs|brl }}</h1>
+    <div class="saldo-info">
+        <div>
+            <span>↑ Receitas do mês</span>
+            <strong class="receita">R$ {{ resumo.receitas|brl }}</strong>
+        </div>
+        <div>
+            <span>↓ Despesas do mês</span>
+            <strong class="despesa">R$ {{ resumo.despesas|brl }}</strong>
+        </div>
+    </div>
+</section>
+
+{% include '_cartoes_contas.html' %}
+
+{% if vencimentos %}
+<section class="card">
+    <div class="section-titulo">
+        <div>
+            <span>Despesas fixas</span>
+            <h2>Próximos vencimentos</h2>
+        </div>
+        <a href="{{ url_for('planejamento') }}#fixas" class="ver-todas">Ver todas</a>
+    </div>
+    {% for f in vencimentos %}
+    <div class="conta-linha">
+        <div class="conta-info">
+            <strong>{{ f.descricao }}</strong>
+            <span class="status {{ f.estado }}">{{ f.texto }}</span>
+        </div>
+        <strong class="valor-despesa">R$ {{ f.valor|brl }}</strong>
+    </div>
+    {% endfor %}
+</section>
+{% endif %}
+
+<!-- DESPESAS POR CATEGORIA -->
+<section class="card">
+    <div class="section-titulo">
+        <div>
+            <span>Visão geral</span>
+            <h2>Despesas por categoria</h2>
+        </div>
+    </div>
+
+{% if categorias %}
+    <div class="grafico-container">
+        <div class="grafico"
+             role="img"
+             aria-label="Gráfico de despesas por categoria"
+             style="background: conic-gradient({% for c in categorias %}{{ c.cor }} {{ '%.2f'|format(c.inicio) }}% {{ '%.2f'|format(c.fim) }}%{% if not loop.last %}, {% endif %}{% endfor %});">
+            <div class="grafico-centro">
+                <strong>R$ {{ total_despesas|brl }}</strong>
+                <span>em despesas</span>
+            </div>
+        </div>
+
+        <div class="legenda">
+            {% for c in categorias %}
+            <div class="legenda-item">
+                <div class="legenda-nome">
+                    <span class="bolinha" style="background: {{ c.cor }}"></span>
+                    <span>{{ c.nome }}</span>
+                </div>
+                <strong>
+                    R$ {{ c.valor|brl }}
+                    <small>{{ '%.0f'|format(c.porcentagem) }}%</small>
+                </strong>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+    <div class="vazio">
+        <strong>Nenhuma despesa em {{ mes_nome }}</strong>
+        <span>Toque em + para registrar um gasto.</span>
+    </div>
+{% endif %}
+</section>
+
+<!-- TRANSAÇÕES -->
+<section class="card">
+    <div class="section-titulo">
+        <div>
+            <span>Movimentações</span>
+            <h2>Últimas transações</h2>
+        </div>
+        <a href="{{ url_for('transacoes') }}" class="ver-todas">Ver todas</a>
+    </div>
+
+    <div class="transacoes">
+    {% for t in transacoes[:6] %}
+        {% set e_receita = t["tipo"] == "receita" %}
+        <div class="transacao">
+            <div class="transacao-icone {{ 'receita-bg' if e_receita else 'despesa-bg' }}">
+                {{ "↑" if e_receita else "↓" }}
+            </div>
+            <div class="transacao-info">
+                <strong>{{ t["descricao"] }}</strong>
+                <span>{{ t["categoria"] }} · {{ t["conta"] }}</span>
+                <span class="transacao-data">{{ t["data"]|data_br }}</span>
+            </div>
+            <strong class="{{ 'valor-receita' if e_receita else 'valor-despesa' }}">
+                {{ "+" if e_receita else "−" }} R$ {{ t["valor"]|brl }}
+            </strong>
+        </div>
+    {% else %}
+        <div class="vazio-transacoes">
+            <strong>Nenhuma transação em {{ mes_nome }}</strong>
+            <span>Toque em + para adicionar a primeira.</span>
+        </div>
+    {% endfor %}
+    </div>
+</section>
+
+</main>
+
+
+{% include '_menu.html' %}
+
+{% include '_modal.html' %}
+
+</div>
+</body>
+</html>

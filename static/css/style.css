@@ -1,0 +1,185 @@
+/* ==========================================================
+   Meus Gastos — landing, cadastro e login
+   ========================================================== */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --roxo: #7138f2;
+    --roxo-escuro: #5224c9;
+    --roxo-claro: #eee8ff;
+
+    --fundo: #f5f5fa;
+    --branco: #ffffff;
+    --texto: #1d1d27;
+    --cinza: #686876;
+    --borda: #ececf2;
+
+    --verde: #1f8f45;
+    --vermelho: #d93a3a;
+
+    --fonte: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --sombra: 0 10px 35px rgba(37, 25, 80, .08);
+}
+
+body {
+    font-family: var(--fonte);
+    background: var(--fundo);
+    color: var(--texto);
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 2px solid var(--roxo); outline-offset: 2px; }
+
+/* ---------- Topo ---------- */
+
+.topo { max-width: 1100px; margin: auto; padding: 24px 24px; display: flex; align-items: center; justify-content: space-between; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; }
+.logo-icon {
+    width: 38px; height: 38px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--roxo), #914ff5);
+    color: #fff; font-weight: 800; box-shadow: 0 8px 20px rgba(113, 56, 242, .25);
+}
+.btn-cadastro {
+    text-decoration: none; color: var(--roxo); font-weight: 700; font-size: 14px;
+    padding: 10px 18px; border-radius: 12px; background: var(--roxo-claro);
+}
+.btn-cadastro:hover { background: #e2d8ff; }
+
+/* ---------- Container e hero ---------- */
+
+.container { width: 100%; max-width: 1100px; margin: auto; padding: 24px 24px 70px; }
+.saudacao { padding: 48px 0 36px; max-width: 680px; }
+
+.pequeno { color: var(--roxo); font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+
+.saudacao h1 { font-size: clamp(2.3rem, 6vw, 4rem); line-height: 1.05; letter-spacing: -.04em; margin-bottom: 20px; }
+.saudacao h1 span { color: var(--roxo); }
+.descricao { color: var(--cinza); font-size: 17px; max-width: 540px; line-height: 1.65; margin-bottom: 28px; }
+
+/* ---------- Botões ---------- */
+
+.btn-principal {
+    display: inline-flex; align-items: center; justify-content: center;
+    text-decoration: none; border: 0; cursor: pointer; font-family: inherit;
+    background: linear-gradient(135deg, var(--roxo), #8b4df2);
+    color: #fff; padding: 14px 22px; border-radius: 14px; font-weight: 700; font-size: 15px;
+    box-shadow: 0 10px 22px rgba(113, 56, 242, .22);
+    transition: transform .2s, box-shadow .2s;
+}
+.btn-principal:hover { transform: translateY(-1px); box-shadow: 0 13px 25px rgba(113, 56, 242, .28); }
+.btn-full { width: 100%; }
+
+/* ---------- Cards de resumo ---------- */
+
+.resumo { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+.card { background: var(--branco); border: 1px solid var(--borda); border-radius: 22px; padding: 22px; box-shadow: var(--sombra); min-height: 130px; }
+.card > span { display: block; color: var(--cinza); font-size: 14px; margin-bottom: 12px; }
+.card strong { display: block; font-size: 1.35rem; margin-bottom: 8px; font-variant-numeric: tabular-nums; }
+
+.saldo { background: linear-gradient(135deg, #6637e7, #8c4ff2); color: #fff; border: 0; }
+.saldo > span { color: rgba(255,255,255,.85); }
+.saldo strong { font-size: 2rem; }
+.variacao { font-size: 13px; font-weight: 600; }
+.positivo { color: #c4f5d2; }
+
+.titulo-card { display: flex; align-items: center; gap: 8px; color: var(--cinza); font-size: 14px; margin-bottom: 12px; }
+.icone { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.verde { color: var(--verde); background: #e6f6ec; }
+.vermelho { color: var(--vermelho); background: #fdeaea; }
+
+/* Selo para dados de demonstração */
+.tag-exemplo {
+    display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+    background: var(--roxo-claro); color: var(--roxo); font-size: 12px; font-weight: 600; vertical-align: middle;
+}
+
+/* ---------- Categorias (landing) ---------- */
+
+.categoria-section { background: var(--branco); border: 1px solid var(--borda); border-radius: 22px; padding: 24px; box-shadow: var(--sombra); margin-bottom: 24px; }
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.section-header h2 { font-size: 18px; }
+.mes { background: var(--roxo-claro); color: var(--roxo); padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+
+.categoria { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--borda); }
+.categoria:last-child { border-bottom: 0; }
+.categoria-nome { display: flex; align-items: center; gap: 10px; color: var(--cinza); font-size: 15px; }
+.categoria strong { font-size: 15px; font-variant-numeric: tabular-nums; }
+
+.bolinha { width: 10px; height: 10px; border-radius: 50%; }
+.roxa { background: #7138f2; }
+.azul { background: #a78bfa; }       /* tons de roxo, igual ao gráfico do dashboard */
+.vermelha { background: #c4b5fd; }
+.cinza { background: #ddd6fe; }
+
+/* ---------- CTA ---------- */
+
+.cta {
+    background: linear-gradient(135deg, #5427cc, #803eea); color: #fff;
+    border-radius: 24px; padding: 30px; display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+.cta h2 { font-size: 22px; margin-bottom: 8px; }
+.cta p { color: rgba(255,255,255,.85); font-size: 15px; line-height: 1.6; }
+.btn-branco { background: #fff; color: var(--roxo); padding: 13px 18px; border-radius: 12px; text-decoration: none; font-weight: 700; white-space: nowrap; }
+
+footer { text-align: center; padding: 24px; color: var(--cinza); font-size: 13px; }
+
+/* ---------- Cadastro / login ---------- */
+
+.pagina-cadastro { display: flex; align-items: center; justify-content: center; padding: 30px 16px; }
+.cadastro-container { width: 100%; max-width: 450px; }
+.cadastro-logo { display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 800; margin-bottom: 20px; }
+.cadastro-card { background: var(--branco); border: 1px solid var(--borda); border-radius: 26px; padding: 30px; box-shadow: 0 20px 60px rgba(38, 25, 83, .10); }
+
+.voltar { margin-bottom: 24px; }
+.voltar a { color: var(--cinza); text-decoration: none; font-size: 14px; font-weight: 600; }
+.voltar a:hover { color: var(--roxo); }
+
+.cadastro-header { margin-bottom: 24px; }
+.cadastro-header h1 { font-size: 28px; margin-bottom: 8px; letter-spacing: -.02em; }
+.cadastro-header p:last-child { color: var(--cinza); font-size: 15px; }
+
+.campo { margin-bottom: 18px; }
+.campo label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 7px; }
+.campo input {
+    width: 100%; padding: 13px 14px; border: 1px solid var(--borda); border-radius: 12px;
+    background: var(--fundo); color: var(--texto); font-family: inherit; font-size: 16px;
+}
+.campo input:focus { outline: none; border-color: var(--roxo); background: #fff; box-shadow: 0 0 0 3px rgba(113, 56, 242, .12); }
+
+.alert { padding: 12px 14px; border-radius: 12px; font-size: 14px; font-weight: 600; margin-bottom: 16px; }
+.alert.erro { background: #fdeaea; color: var(--vermelho); }
+.alert.sucesso { background: #e6f6ec; color: var(--verde); }
+
+.login-link { text-align: center; margin-top: 20px; color: var(--cinza); font-size: 14px; }
+.login-link a { color: var(--roxo); font-weight: 700; text-decoration: none; }
+.login-link a:hover { text-decoration: underline; }
+
+/* ---------- Responsivo ---------- */
+
+@media (max-width: 760px) {
+    .topo { padding: 18px 16px; }
+    .container { padding: 14px 16px 45px; }
+    .saudacao { padding: 32px 0 24px; }
+    .resumo { grid-template-columns: 1fr 1fr; }
+    .saldo { grid-column: 1 / -1; }
+    .cta { flex-direction: column; align-items: flex-start; }
+    .btn-branco { width: 100%; text-align: center; }
+}
+
+@media (max-width: 480px) {
+    .btn-cadastro { padding: 8px 12px; font-size: 13px; }
+    .resumo { grid-template-columns: 1fr; }
+    .saldo { grid-column: auto; }
+    .card { min-height: 110px; }
+    .section-header { align-items: flex-start; }
+    .cadastro-card { padding: 24px 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+}

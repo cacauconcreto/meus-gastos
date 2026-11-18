@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contas e salário — Meus Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="app">
+
+{% macro form_salario() %}
+<form method="POST" action="{{ url_for('salvar_salario_rota') }}">
+    <div class="duas-colunas">
+        <div>
+            <label for="valor-salario">Valor líquido (R$)</label>
+            <input type="number" id="valor-salario" name="valor" step="0.01" min="0.01" inputmode="decimal"
+                   placeholder="Ex.: 2500,00" value="{{ '%.2f'|format(salario['valor']) if salario }}" required>
+        </div>
+        <div>
+            <label for="dia-salario">Dia do recebimento</label>
+            <input type="number" id="dia-salario" name="dia" min="1" max="31" placeholder="5"
+                   value="{{ salario['dia'] if salario }}" required>
+        </div>
+    </div>
+
+    <label for="conta-salario">Cai na conta</label>
+    <select id="conta-salario" name="conta" required>
+        {% for c in contas %}
+            <option value="{{ c.nome }}" {{ 'selected' if salario and salario['conta'] == c.nome }}>{{ c.nome }}</option>
+        {% endfor %}
+    </select>
+
+    <label class="check">
+        <input type="checkbox" name="ativo" {{ 'checked' if not salario or salario['ativo'] }}>
+        Lançar automaticamente todo mês
+    </label>
+
+    <button type="submit" class="btn-principal btn-full">Salvar salário</button>
+    <p class="dica">No dia do recebimento, a receita "Salário" é lançada sozinha. Se o dia for 31 e o mês for mais curto, vale o último dia.</p>
+</form>
+{% endmacro %}
+
+<header class="dashboard-topo">
+    <div class="perfil">
+        <div class="avatar">{{ usuario["nome"][0].upper() }}</div>
+        <div>
+            <span>Configurações</span>
+            <strong>Contas e salário</strong>
+        </div>
+    </div>
+    <div class="acoes-topo">
+        <a href="{{ url_for('mais') }}" class="icone-btn" aria-label="Voltar">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        </a>
+    </div>
+</header>
+
+<main>
+
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% for categoria_msg, texto in mensagens %}
+        <div class="flash {{ categoria_msg }}" role="status">{{ texto }}</div>
+    {% endfor %}
+{% endwith %}
+
+<section class="saldo-card compacto">
+    <div class="saldo-topo"><span>Saldo total em contas</span></div>
+    <h1>{{ "−" if saldo_contas < 0 }}R$ {{ saldo_contas|abs|brl }}</h1>
+    <p class="saldo-sub">{{ contas|length }} conta{{ 's' if contas|length != 1 }}</p>
+</section>
+
+<!-- ===== CONTAS ===== -->
+<section class="card form-padrao">
+    <div class="section-titulo">
+        <div><span>Onde seu dinheiro está</span><h2>Suas contas</h2></div>
+    </div>
+
+    <div class="lista-contas">
+    {% for c in contas %}
+        <div class="conta-linha">
+            <div class="conta-avatar cartao-{{ loop.index0 % 4 }}" aria-hidden="true">{{ c.nome[0].upper() }}</div>
+            <div class="conta-info">
+                <strong>{{ c.nome }}</strong>
+                <span>{{ tipos.get(c.tipo, c.tipo) }}</span>
+            </div>
+            <div class="conta-saldo">
+                <strong class="{{ 'valor-receita' if c.saldo >= 0 else 'valor-despesa' }}">{{ "−" if c.saldo < 0 }}R$ {{ c.saldo|abs|brl }}</strong>
+                {% if c.saldo < 0 %}<small>Saldo negativo</small>{% endif %}
+            </div>
+            <form method="POST" action="{{ url_for('apagar_conta', conta_id=c.id) }}"
+                  onsubmit="return confirm('Remover a conta {{ c.nome|e }}?')">
+                <button type="submit" class="btn-icone-sutil" aria-label="Remover {{ c.nome }}">×</button>
+            </form>
+        </div>
+    {% endfor %}
+    </div>
+
+    <details class="expansivel" id="nova-conta">
+        <summary>+ Adicionar conta</summary>
+        <div class="expansivel-corpo">
+            <form method="POST" action="{{ url_for('nova_conta') }}">
+                <label for="nome-conta">Nome</label>
+                <input type="text" id="nome-conta" name="nome" maxlength="40" placeholder="Ex.: Nubank, Caixa..." required>
+
+                <div class="duas-colunas">
+                    <div>
+                        <label for="tipo-conta">Tipo</label>
+                        <select id="tipo-conta" name="tipo">
+                            {% for chave, rotulo in tipos.items() %}<option value="{{ chave }}">{{ rotulo }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="saldo-conta">Saldo inicial (R$)</label>
+                        <input type="number" id="saldo-conta" name="saldo_inicial" step="0.01" value="0.00" inputmode="decimal">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-principal btn-full">Adicionar conta</button>
+            </form>
+        </div>
+    </details>
+</section>
+
+<!-- ===== SALÁRIO ===== -->
+<section class="card form-padrao" id="salario">
+    <div class="section-titulo">
+        <div><span>Receita automática</span><h2>Salário</h2></div>
+        {% if salario %}
+            <span class="status {{ 'paga' if salario['ativo'] else '' }}">{{ 'Ativo' if salario['ativo'] else 'Pausado' }}</span>
+        {% endif %}
+    </div>
+
+    {% if salario %}
+        <div class="salario-resumo">
+            <strong>R$ {{ salario['valor']|brl }}</strong>
+            <span>Todo dia {{ salario['dia'] }} · cai na conta {{ salario['conta'] }}</span>
+        </div>
+
+        <details class="expansivel">
+            <summary>Editar salário</summary>
+            <div class="expansivel-corpo">{{ form_salario() }}</div>
+        </details>
+    {% else %}
+        <p class="dica" style="margin:-6px 0 18px">Informe quanto e quando você recebe, e a receita será lançada sozinha todo mês.</p>
+        {{ form_salario() }}
+    {% endif %}
+</section>
+
+</main>
+
+{% include '_menu.html' %}
+
+</div>
+</body>
+</html>

@@ -1,0 +1,551 @@
+/* ==========================================================
+   Meus Gastos — dashboard
+   ========================================================== */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+    --roxo: #7138f2;
+    --roxo-escuro: #5224c9;
+    --roxo-claro: #eee8ff;
+
+    --fundo: #f5f5fa;
+    --branco: #ffffff;
+    --texto: #1d1d27;
+    --cinza: #686876;          /* contraste AA sobre branco */
+    --borda: #ececf2;
+
+    --verde: #1f8f45;
+    --vermelho: #d93a3a;
+    --verde-claro: #e6f6ec;
+    --vermelho-claro: #fdeaea;
+
+    --fonte: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --largura: 760px;
+}
+
+body {
+    font-family: var(--fonte);
+    background: var(--fundo);
+    color: var(--texto);
+    min-height: 100vh;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+}
+
+.app {
+    width: 100%;
+    max-width: var(--largura);
+    margin: auto;
+    min-height: 100vh;
+    padding-bottom: 110px;
+}
+
+main { padding: 0 20px; }
+
+:focus-visible { outline: 2px solid var(--roxo); outline-offset: 2px; }
+
+/* ---------- Topo ---------- */
+
+.dashboard-topo { display: flex; justify-content: space-between; align-items: center; padding: 22px 20px 12px; }
+.perfil { display: flex; align-items: center; gap: 12px; }
+.perfil > div:last-child { display: flex; flex-direction: column; gap: 2px; }
+.perfil span { font-size: 12px; color: var(--cinza); }
+.perfil strong { font-size: 16px; }
+
+.avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: linear-gradient(135deg, #7138f2, #a26cff);
+    color: #fff; font-weight: 700; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.acoes-topo { display: flex; gap: 8px; }
+
+.icone-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid var(--borda); background: #fff; color: var(--cinza);
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none; cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.icone-btn:hover { background: var(--roxo-claro); color: var(--roxo); }
+.icone-btn svg, .menu-inferior svg {
+    width: 20px; height: 20px; fill: none; stroke: currentColor;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ---------- Navegação do mês ---------- */
+
+.mes-navegacao { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 20px 18px; }
+.mes-navegacao strong { font-size: 15px; min-width: 150px; text-align: center; }
+.mes-navegacao a {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; line-height: 1; color: var(--cinza); text-decoration: none;
+    transition: background .15s, color .15s;
+}
+.mes-navegacao a:hover { background: var(--roxo-claro); color: var(--roxo); }
+.mes-navegacao a[aria-disabled="true"] { opacity: .3; pointer-events: none; }
+
+/* ---------- Mensagens ---------- */
+
+.flash { margin-bottom: 16px; padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+.flash.sucesso { background: var(--verde-claro); color: var(--verde); }
+.flash.erro { background: var(--vermelho-claro); color: var(--vermelho); }
+
+/* ---------- Cards ---------- */
+
+.card {
+    background: var(--branco); border: 1px solid var(--borda);
+    border-radius: 20px; padding: 24px; margin-bottom: 20px;
+}
+
+.saldo-card {
+    background: linear-gradient(135deg, #6632e9, #8148f4);
+    border-radius: 24px; padding: 24px; color: #fff; margin-bottom: 16px;
+    box-shadow: 0 15px 35px rgba(91, 45, 211, .22);
+}
+.saldo-topo { font-size: 14px; color: rgba(255,255,255,.8); }
+.saldo-card h1 { font-size: 34px; margin: 6px 0 22px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.saldo-info { display: flex; gap: 48px; }
+.saldo-info div { display: flex; flex-direction: column; gap: 4px; }
+.saldo-info span { color: rgba(255,255,255,.8); font-size: 13px; }
+.saldo-info strong { font-size: 16px; font-variant-numeric: tabular-nums; }
+.receita { color: #c4f5d2; }
+.despesa { color: #ffd0d0; }
+
+.section-titulo { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.section-titulo > div { min-width: 0; }
+.section-titulo span { color: var(--cinza); font-size: 13px; }
+.section-titulo h2 { font-size: 18px; margin-top: 2px; }
+.ver-todas { color: var(--roxo); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.ver-todas:hover { text-decoration: underline; }
+
+/* ---------- Gráfico ---------- */
+
+.grafico-container { display: flex; align-items: center; gap: 28px; }
+
+.grafico {                               /* o background (conic-gradient) vem do template */
+    position: relative; flex: none;
+    width: 160px; height: 160px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+.grafico::after { content: ""; position: absolute; inset: 26px; background: #fff; border-radius: 50%; }
+
+.grafico-centro { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 104px; }
+.grafico-centro strong { font-size: 15px; font-variant-numeric: tabular-nums; }
+.grafico-centro span { color: var(--cinza); font-size: 12px; }
+
+.legenda { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.legenda-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; }
+.legenda-nome { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--texto); }
+.legenda-nome span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.legenda-item strong { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.legenda-item small { display: block; color: var(--cinza); font-weight: 400; font-size: 12px; }
+.bolinha { width: 10px; height: 10px; flex: none; border-radius: 50%; }
+
+/* ---------- Transações ---------- */
+
+.transacao { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--borda); }
+.transacao:last-child { border-bottom: 0; padding-bottom: 0; }
+.transacao:first-child { padding-top: 0; }
+
+.transacao-icone {
+    width: 40px; height: 40px; flex: none; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-weight: 700;
+}
+.receita-bg { background: var(--verde-claro); color: var(--verde); }
+.despesa-bg { background: var(--vermelho-claro); color: var(--vermelho); }
+
+.transacao-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.transacao-info strong { font-size: 15px; }
+.transacao-info span { color: var(--cinza); font-size: 13px; }
+.transacao-info strong, .transacao-info span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.valor-receita, .valor-despesa { font-size: 15px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.valor-receita { color: var(--verde); }
+.valor-despesa { color: var(--vermelho); }
+
+/* ---------- Estados vazios ---------- */
+
+.vazio, .vazio-transacoes { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 28px 12px; }
+.vazio strong, .vazio-transacoes strong { font-size: 15px; }
+.vazio span, .vazio-transacoes span { color: var(--cinza); font-size: 14px; }
+
+/* ---------- Botão + ---------- */
+
+.botao-add {
+    position: fixed; right: max(20px, calc(50% - var(--largura) / 2 + 20px)); bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+    width: 58px; height: 58px; border: 0; border-radius: 50%;
+    background: linear-gradient(135deg, #692ff0, #8a4ff5);
+    color: #fff; font-size: 30px; line-height: 1; cursor: pointer; z-index: 20;
+    box-shadow: 0 12px 30px rgba(98, 43, 228, .35);
+    transition: transform .15s;
+}
+.botao-add:hover { transform: scale(1.05); }
+.botao-add:active { transform: scale(.96); }
+
+/* ---------- Menu inferior ---------- */
+
+.menu-inferior {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: min(100%, var(--largura));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(255,255,255,.96); backdrop-filter: blur(10px);
+    border-top: 1px solid var(--borda);
+    display: flex; justify-content: space-around; z-index: 10;
+}
+.menu-inferior a {
+    flex: 1; height: 64px; gap: 4px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #7b7b88; text-decoration: none; font-size: 12px;
+    transition: color .15s;
+}
+.menu-inferior a:hover, .menu-inferior .ativo { color: var(--roxo); }
+.menu-inferior .ativo { font-weight: 700; }
+
+/* ---------- Modal ---------- */
+
+.modal { position: fixed; inset: 0; z-index: 50; display: none; align-items: flex-end; justify-content: center; background: rgba(20,15,35,.55); }
+.modal.aberto { display: flex; }
+
+.modal-conteudo {
+    width: min(100%, 500px); max-height: 92vh; overflow-y: auto;
+    background: #fff; border-radius: 28px 28px 0 0;
+    padding: 26px 24px calc(24px + env(safe-area-inset-bottom, 0px));
+    animation: subirModal .2s ease;
+}
+@keyframes subirModal { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.modal-conteudo .pequeno { color: var(--cinza); font-size: 13px; }
+.modal-conteudo h2 { font-size: 22px; margin: 2px 0 20px; }
+
+.fechar {
+    float: right; width: 36px; height: 36px; border: 0; border-radius: 50%;
+    background: #f2f2f5; font-size: 22px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.fechar:hover { background: #e9e9ee; }
+
+.modal-conteudo input, .modal-conteudo select {
+    width: 100%; padding: 13px 14px; margin-bottom: 12px;
+    border: 1px solid var(--borda); border-radius: 12px; background: #fff;
+    color: var(--texto); font-family: inherit; font-size: 16px;   /* 16px evita zoom no iOS */
+}
+.modal-conteudo input:focus, .modal-conteudo select:focus { outline: none; border-color: var(--roxo); box-shadow: 0 0 0 3px rgba(113,56,242,.12); }
+
+/* Tipo: despesa / receita (inputs ficam acessíveis por teclado) */
+.tipo { display: flex; gap: 10px; margin-bottom: 14px; }
+.tipo label { flex: 1; position: relative; }
+.tipo input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.tipo span {
+    display: block; text-align: center; padding: 12px; border-radius: 12px;
+    background: #f3f3f6; border: 1px solid transparent; font-size: 14px; font-weight: 600;
+    transition: background .15s;
+}
+.tipo input:checked + span { background: var(--roxo-claro); color: var(--roxo); border-color: rgba(113,56,242,.2); }
+.tipo input:focus-visible + span { outline: 2px solid var(--roxo); outline-offset: 2px; }
+
+.btn-principal {
+    border: 0; border-radius: 12px; padding: 14px; cursor: pointer;
+    background: linear-gradient(135deg, #692ff0, #8a4ff5);
+    color: #fff; font-family: inherit; font-size: 15px; font-weight: 700;
+}
+.btn-principal:hover { filter: brightness(.95); }
+.btn-full { width: 100%; }
+
+/* ---------- Celular ---------- */
+
+@media (max-width: 520px) {
+    main { padding: 0 14px; }
+    .dashboard-topo { padding: 18px 14px 10px; }
+    .card { padding: 18px; }
+    .saldo-card { padding: 20px; }
+    .saldo-card h1 { font-size: 30px; }
+    .saldo-info { gap: 32px; }
+    .grafico-container { flex-direction: column; gap: 22px; }
+    .legenda { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+}
+
+/* ==========================================================
+   Páginas internas: transações, planejamento, mais
+   ========================================================== */
+
+.pagina-header { margin: 4px 0 22px; }
+.pagina-header span { color: var(--cinza); font-size: 13px; }
+.pagina-header h1 { font-size: 24px; margin-top: 2px; letter-spacing: -.02em; }
+
+/* Filtros (chips) */
+.filtros { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; }
+.filtro {
+    padding: 9px 16px; border-radius: 999px; white-space: nowrap;
+    background: #fff; border: 1px solid var(--borda); color: var(--cinza);
+    font-size: 14px; font-weight: 600; text-decoration: none;
+    transition: background .15s, color .15s;
+}
+.filtro:hover { background: var(--roxo-claro); color: var(--roxo); }
+.filtro.ativo { background: var(--roxo); border-color: var(--roxo); color: #fff; }
+
+/* Limites de gastos */
+.barra { height: 12px; border-radius: 999px; background: #efeff5; overflow: hidden; }
+.barra-progresso { height: 100%; border-radius: 999px; background: var(--roxo); transition: width .3s; }
+.barra-progresso.alerta { background: #e69a1a; }
+.barra-progresso.estourou { background: var(--vermelho); }
+
+.tag-breve {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    background: var(--roxo-claro); color: var(--roxo); font-size: 12px; font-weight: 600;
+}
+
+/* Menu "Mais" */
+.menu-card { padding: 6px 18px; }
+.menu-item {
+    display: flex; align-items: center; gap: 14px; padding: 16px 0;
+    border-bottom: 1px solid var(--borda); color: var(--texto); text-decoration: none;
+}
+.menu-item:last-child { border-bottom: 0; }
+.menu-item > svg { width: 22px; height: 22px; flex: none; fill: none; stroke: var(--roxo); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.menu-item > div { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.menu-item strong { font-size: 15px; }
+.menu-item small { color: var(--cinza); font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
+.menu-item b { color: var(--cinza); font-size: 20px; }
+.menu-item.desativado { opacity: .75; }
+a.menu-item:hover strong { color: var(--roxo); }
+.sair { color: var(--vermelho); }
+a.menu-item:hover .sair { color: var(--vermelho); text-decoration: underline; }
+
+/* ---------- Contas e salário ---------- */
+
+.saldo-topo { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+
+.form-padrao label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.form-padrao input[type="text"], .form-padrao input[type="number"], .form-padrao select {
+    width: 100%; padding: 13px 14px; margin-bottom: 14px;
+    border: 1px solid var(--borda); border-radius: 12px; background: #fff;
+    color: var(--texto); font-family: inherit; font-size: 16px;
+}
+.form-padrao input:focus, .form-padrao select:focus { outline: none; border-color: var(--roxo); box-shadow: 0 0 0 3px rgba(113,56,242,.12); }
+.form-padrao .check { display: flex; align-items: center; gap: 10px; font-weight: 400; margin-bottom: 16px; }
+.form-padrao .check input { width: 18px; height: 18px; margin: 0; accent-color: var(--roxo); }
+.form-padrao .dica { color: var(--cinza); font-size: 13px; margin-top: 12px; line-height: 1.5; }
+
+/* ---------- Saldo total + cartões das contas ---------- */
+
+
+.cartoes {
+    display: flex; gap: 14px; padding: 12px 20px 28px; margin: -8px 0 -16px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 20px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.cartoes::-webkit-scrollbar { display: none; }
+
+.cartao {
+    position: relative; overflow: hidden; flex: 0 0 min(300px, 82%);
+    aspect-ratio: 1.6 / 1; min-height: 170px; scroll-snap-align: start;
+    padding: 18px 20px; border-radius: 22px; color: #fff;
+    display: flex; flex-direction: column; justify-content: space-between;
+    box-shadow: 0 10px 24px rgba(60, 30, 140, .18);
+}
+.cartao::before {              /* brilho decorativo */
+    content: ""; position: absolute; width: 190px; height: 190px; right: -60px; top: -80px;
+    border-radius: 50%; background: radial-gradient(circle, rgba(255,255,255,.22), transparent 70%);
+    pointer-events: none;
+}
+.cartao > * { position: relative; }
+
+.cartao-0 { background: linear-gradient(135deg, #5b2bdc, #9a62f7); }
+.cartao-1 { background: linear-gradient(135deg, #1f1b3a, #43358a); }
+.cartao-2 { background: linear-gradient(135deg, #7138f2, #b07cff); }
+.cartao-3 { background: linear-gradient(135deg, #34187c, #6d35f2); }
+
+.cartao-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.cartao-topo > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cartao-topo strong { font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cartao-topo span { font-size: 13px; color: rgba(255,255,255,.8); }
+.cartao-chip { width: 34px; height: 26px; flex: none; fill: rgba(255,255,255,.18); stroke: rgba(255,255,255,.65); stroke-width: 1.2; }
+
+.cartao-saldo small, .cartao-rodape small { display: block; font-size: 12px; color: rgba(255,255,255,.75); }
+.cartao-saldo strong { display: block; font-size: 26px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.cartao-saldo strong.negativo { color: #ffd0d0; }
+.cartao-rodape span { font-size: 14px; font-weight: 600; }
+
+.cartao-novo {
+    background: #fff; color: var(--roxo); border: 2px dashed #cdbcff; box-shadow: none;
+    align-items: center; justify-content: center; gap: 8px; text-decoration: none; text-align: center;
+}
+.cartao-novo::before { display: none; }
+.cartao-novo .mais-icone {
+    width: 44px; height: 44px; border-radius: 50%; background: var(--roxo-claro);
+    display: flex; align-items: center; justify-content: center; font-size: 26px;
+}
+.cartao-novo strong { font-size: 15px; }
+.cartao-novo:hover { background: #faf7ff; }
+
+@media (min-width: 900px) { .cartao { flex-basis: 300px; } }
+
+/* ---------- Carrossel: setas, bolinhas e arrastar ---------- */
+
+.cartoes-wrap { position: relative; margin: 0 -20px; }
+.cartoes { cursor: grab; }
+.cartoes.arrastando { cursor: grabbing; scroll-snap-type: none; user-select: none; }
+.cartoes a { -webkit-user-drag: none; }
+
+.cartoes-seta {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 3;
+    width: 38px; height: 38px; border: 0; border-radius: 50%;
+    background: #fff; color: var(--roxo); font-size: 24px; line-height: 1; cursor: pointer;
+    box-shadow: 0 6px 18px rgba(40, 20, 100, .25);
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity .15s;
+}
+.cartoes-seta.esq { left: 8px; }
+.cartoes-seta.dir { right: 8px; }
+.cartoes-seta:disabled { opacity: 0; pointer-events: none; }
+.cartoes-seta:hover:not(:disabled) { background: var(--roxo-claro); }
+@media (hover: none) { .cartoes-seta { display: none; } }
+
+.cartoes-pontos { display: flex; justify-content: center; gap: 7px; margin: 0 0 18px; }
+.cartoes-pontos button { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 50%; background: #d4cdea; cursor: pointer; transition: width .2s, background .2s; }
+.cartoes-pontos button.ativo { width: 20px; border-radius: 999px; background: var(--roxo); }
+
+@media (max-width: 520px) {
+    .cartoes-wrap { margin: 0 -14px; }
+    .cartoes { padding: 12px 14px 28px; scroll-padding: 0 14px; }
+}
+
+/* ==========================================================
+   Planejamento: limites e despesas fixas
+   ========================================================== */
+
+.section-titulo { margin-bottom: 22px; }
+.dica { color: var(--cinza); font-size: 13px; line-height: 1.5; margin-top: 12px; }
+.texto-erro { color: var(--vermelho); font-weight: 600; }
+
+.form-linha { display: flex; gap: 10px; align-items: stretch; }
+.form-linha input { flex: 1; min-width: 0; margin-bottom: 0 !important; }
+.form-linha .btn-principal { flex: none; padding: 0 22px; }
+.duas-colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 400px) { .duas-colunas { grid-template-columns: 1fr; gap: 0; } }
+
+/* Selos de situação */
+.status { display: inline-block; width: fit-content; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #f0f0f5; color: var(--cinza); }
+.status.ok { background: var(--roxo-claro); color: var(--roxo); }
+.status.paga { background: var(--verde-claro); color: var(--verde); }
+.status.alerta, .status.hoje, .status.breve { background: #fff3dc; color: #8a5a00; }
+.status.estourou, .status.atrasada { background: var(--vermelho-claro); color: var(--vermelho); }
+
+/* Barras */
+.barra-progresso.alerta { background: #e69a1a; }
+.barra-progresso.estourou { background: var(--vermelho); }
+
+/* Limite do mês (destaque) */
+.hero-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; color: var(--cinza); font-size: 14px; }
+.hero-valor { display: block; font-size: 30px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.hero-valor small { font-size: 15px; font-weight: 500; color: var(--cinza); letter-spacing: 0; }
+.hero-limite .barra { height: 14px; margin: 18px 0 22px; }
+
+.mini-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding-top: 20px; border-top: 1px solid var(--borda); }
+.mini-stats div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.mini-stats span { font-size: 13px; color: var(--cinza); }
+.mini-stats strong { font-size: 16px; font-variant-numeric: tabular-nums; }
+.mini-stats .neg { color: var(--vermelho); }
+
+.aviso-previsao { margin-top: 18px; padding: 12px 14px; border-radius: 12px; background: #fff3dc; color: #8a5a00; font-size: 14px; line-height: 1.5; }
+
+/* Limites por categoria */
+.meta + .meta { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--borda); }
+.meta-topo { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.meta-topo strong { flex: 1; min-width: 0; font-size: 16px; }
+.meta-valores { font-size: 14px; color: var(--cinza); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.meta-valores b { color: var(--texto); }
+.meta-rodape { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; font-size: 13px; color: var(--cinza); }
+
+.btn-icone-sutil { width: 30px; height: 30px; flex: none; border: 0; border-radius: 50%; background: transparent; color: #a3a3b0; font-size: 19px; line-height: 1; cursor: pointer; }
+.btn-icone-sutil:hover { background: var(--vermelho-claro); color: var(--vermelho); }
+
+/* Despesas fixas */
+.fixa { display: grid; grid-template-columns: 52px 1fr auto; gap: 14px; align-items: center; padding: 18px 0; }
+.fixa:first-child { padding-top: 0; }
+.fixa + .fixa { border-top: 1px solid var(--borda); }
+.fixa-data { width: 52px; height: 58px; border-radius: 14px; background: #f0f0f5; color: var(--cinza); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.fixa-data strong { font-size: 20px; line-height: 1; font-variant-numeric: tabular-nums; }
+.fixa-data small { font-size: 11px; margin-top: 4px; }
+.fixa-paga .fixa-data { background: var(--verde-claro); color: var(--verde); }
+.fixa-atrasada .fixa-data { background: var(--vermelho-claro); color: var(--vermelho); }
+.fixa-hoje .fixa-data, .fixa-breve .fixa-data { background: #fff3dc; color: #8a5a00; }
+
+.fixa-info { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.fixa-info strong { font-size: 16px; }
+.fixa-info .meta-txt { font-size: 13px; color: var(--cinza); }
+.fixa-direita { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.fixa-direita .valor { font-size: 16px; font-variant-numeric: tabular-nums; }
+.fixa-paga .valor { color: var(--cinza); }
+.fixa-acoes { display: flex; align-items: center; gap: 4px; }
+
+.btn-pequeno { border: 0; border-radius: 10px; padding: 9px 16px; cursor: pointer; background: var(--roxo-claro); color: var(--roxo); font-family: inherit; font-size: 14px; font-weight: 700; }
+.btn-pequeno:hover { background: #e2d8ff; }
+
+/* Estado vazio compacto */
+.vazio-mini { display: flex; flex-direction: column; gap: 4px; padding: 6px 0 4px; }
+.vazio-mini strong { font-size: 15px; }
+.vazio-mini span { color: var(--cinza); font-size: 14px; }
+
+/* Formulários que abrem e fecham */
+details.expansivel { margin-top: 24px; }
+details.expansivel > summary {
+    list-style: none; cursor: pointer; padding: 13px; border: 1.5px dashed #cdbcff; border-radius: 14px;
+    color: var(--roxo); font-size: 15px; font-weight: 700; text-align: center; user-select: none;
+}
+details.expansivel > summary::-webkit-details-marker { display: none; }
+details.expansivel > summary:hover { background: #faf7ff; }
+details.expansivel[open] > summary { background: var(--roxo-claro); border-style: solid; border-color: transparent; }
+.expansivel-corpo { padding-top: 20px; }
+
+/* Saldo x limite */
+.faixa-saldo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; padding: 14px 16px; border-radius: 14px; background: #f7f5ff; }
+.faixa-saldo div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.faixa-saldo span { font-size: 13px; color: var(--cinza); }
+.faixa-saldo strong { font-size: 16px; font-variant-numeric: tabular-nums; }
+.faixa-saldo .neg { color: var(--vermelho); }
+
+.atalhos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; font-size: 13px; color: var(--cinza); }
+.chip { border: 1px solid #d9ccff; background: #fff; color: var(--roxo); border-radius: 999px; padding: 6px 14px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.chip:hover { background: var(--roxo-claro); }
+.atalhos-info { flex-basis: 100%; }
+@media (min-width: 520px) { .atalhos-info { flex-basis: auto; } }
+
+/* ==========================================================
+   Contas e salário
+   ========================================================== */
+
+.dashboard-topo + main { padding-top: 8px; }
+
+.saldo-card.compacto h1 { margin-bottom: 6px; }
+.saldo-sub { font-size: 14px; color: rgba(255,255,255,.8); }
+
+.conta-linha { display: flex; align-items: center; gap: 14px; padding: 16px 0; }
+.conta-linha + .conta-linha { border-top: 1px solid var(--borda); }
+.lista-contas .conta-linha:first-child { padding-top: 0; }
+.conta-avatar { width: 44px; height: 44px; flex: none; border-radius: 14px; color: #fff; font-weight: 700; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+.conta-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.conta-info strong { font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.conta-info span { font-size: 13px; color: var(--cinza); }
+.conta-saldo { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.conta-saldo strong { font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.conta-saldo small { font-size: 12px; color: var(--vermelho); }
+
+.salario-resumo { display: flex; flex-direction: column; gap: 4px; padding: 18px; border-radius: 16px; background: #f7f5ff; }
+.salario-resumo strong { font-size: 28px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.salario-resumo span { font-size: 14px; color: var(--cinza); }
+
+/* Seletores com seta própria */
+.form-padrao select, .modal-conteudo select {
+    appearance: none; -webkit-appearance: none; padding-right: 42px;
+    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23686876' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>") no-repeat right 14px center / 16px;
+}
