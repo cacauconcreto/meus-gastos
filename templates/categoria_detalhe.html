@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ cat.nome }} — Meus Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="app tela-cheia">
+
+<header class="nova-topo">
+    <a href="{{ url_for('categorias') }}" class="icone-btn" aria-label="Voltar">
+        <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+    </a>
+    <h1>{{ cat.nome }}</h1>
+    <span></span>
+</header>
+
+<main>
+
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% for categoria_msg, texto in mensagens %}
+        <div class="flash {{ categoria_msg }}" role="status">{{ texto }}</div>
+    {% endfor %}
+{% endwith %}
+
+<section class="card form-padrao">
+    <div class="section-titulo">
+        <div><span>Detalhe do gasto</span><h2>Subcategorias</h2></div>
+    </div>
+
+    {% if cat.subs %}
+    <div class="sub-lista">
+        {% for s in cat.subs %}
+        <form method="POST"
+              action="{{ url_for('apagar_subcategoria', categoria_id=cat.id, sub_id=s.id) }}" class="sub-chip">
+            <span>{{ s.nome }}</span>
+            <button type="submit" aria-label="Remover {{ s.nome }}">×</button>
+        </form>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="vazio-mini"><span>Nenhuma subcategoria ainda.</span></div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('nova_subcategoria', categoria_id=cat.id) }}"
+          class="form-linha" style="margin-top:18px">
+        <input type="text" name="nome" placeholder="Nova subcategoria (ex.: Mercado)" maxlength="30" required>
+        <button type="submit" class="btn-principal">Adicionar</button>
+    </form>
+</section>
+
+<form method="POST" action="{{ url_for('apagar_categoria', categoria_id=cat.id) }}"
+      onsubmit="return confirm('Remover a categoria {{ cat.nome|e }}?')">
+    <button type="submit" class="btn-principal btn-full"
+            style="background:var(--vermelho-claro);color:var(--vermelho);box-shadow:none">Excluir categoria</button>
+</form>
+
+</main>
+
+</div>
+</body>
+</html>

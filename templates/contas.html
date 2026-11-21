@@ -43,7 +43,7 @@
 
 <header class="dashboard-topo">
     <div class="perfil">
-        <div class="avatar">{{ usuario["nome"][0].upper() }}</div>
+        <a href="{{ url_for('mais') }}" class="avatar" aria-label="Configurações">{{ usuario["nome"][0].upper() }}</a>
         <div>
             <span>Configurações</span>
             <strong>Contas e salário</strong>
@@ -152,5 +152,6 @@
 {% include '_menu.html' %}
 
 </div>
+<script src="{{ url_for('static', filename='js/seletor.js') }}"></script>
 </body>
 </html>

@@ -1,45 +1,34 @@
-<button type="button" class="botao-add" onclick="abrirModal()" aria-label="Adicionar transação">+</button>
+<div id="fab-fundo" class="fab-fundo" onclick="fecharFab()"></div>
 
-<!-- MODAL -->
-<div id="modal" class="modal">
-    <div class="modal-conteudo" role="dialog" aria-modal="true" aria-labelledby="titulo-modal">
-        <button type="button" class="fechar" onclick="fecharModal()" aria-label="Fechar">×</button>
-
-        <p class="pequeno">Nova movimentação</p>
-        <h2 id="titulo-modal">Adicionar transação</h2>
-
-        <form method="POST" action="{{ url_for('nova_transacao') }}">
-            <div class="tipo">
-                <label><input type="radio" name="tipo" value="despesa" checked><span>Despesa</span></label>
-                <label><input type="radio" name="tipo" value="receita"><span>Receita</span></label>
-            </div>
-
-            <input type="text" name="descricao" placeholder="Descrição" maxlength="80"
-                   autocomplete="off" required>
-
-            <input type="number" name="valor" step="0.01" min="0.01" inputmode="decimal"
-                   placeholder="Valor (R$)" required>
-
-            <select name="categoria" required>
-                {% for c in categorias_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
-            </select>
-
-            <select name="conta" required>
-                {% for c in contas_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
-            </select>
-
-            <input type="date" name="data" value="{{ hoje }}" required>
-
-            <button type="submit" class="btn-principal btn-full">Salvar transação</button>
-        </form>
-    </div>
+<div id="fab-menu" class="fab-menu" hidden>
+    <a href="{{ url_for('tela_nova', tipo='receita') }}" class="fab-item">
+        Receita
+        <span class="fab-circulo verde-txt"><svg viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></span>
+    </a>
+    <a href="{{ url_for('tela_nova', tipo='despesa') }}" class="fab-item">
+        Despesa
+        <span class="fab-circulo vermelho-txt"><svg viewBox="0 0 24 24"><path d="m3 7 6 6 4-4 8 8"/><path d="M15 17h6v-6"/></svg></span>
+    </a>
+    <a href="{{ url_for('tela_nova', tipo='transferencia') }}" class="fab-item">
+        Transferência
+        <span class="fab-circulo roxo-txt"><svg viewBox="0 0 24 24"><path d="M17 3l4 4-4 4"/><path d="M3 11V9a2 2 0 0 1 2-2h16"/><path d="M7 21l-4-4 4-4"/><path d="M21 13v2a2 2 0 0 1-2 2H3"/></svg></span>
+    </a>
 </div>
 
-<script>
-    const modal = document.getElementById("modal");
-    const abrirModal = () => modal.classList.add("aberto");
-    const fecharModal = () => modal.classList.remove("aberto");
+<button type="button" id="fab" class="botao-add" onclick="alternarFab()" aria-label="Adicionar" aria-expanded="false">+</button>
 
-    modal.addEventListener("click", e => { if (e.target === modal) fecharModal(); });
-    document.addEventListener("keydown", e => { if (e.key === "Escape") fecharModal(); });
+<script>
+    const fab = document.getElementById("fab");
+    const fabMenu = document.getElementById("fab-menu");
+    const fabFundo = document.getElementById("fab-fundo");
+
+    function alternarFab() {
+        const abrir = fabMenu.hidden;
+        fabMenu.hidden = !abrir;
+        fabFundo.classList.toggle("aberto", abrir);
+        fab.classList.toggle("aberto", abrir);
+        fab.setAttribute("aria-expanded", abrir);
+    }
+    function fecharFab() { if (!fabMenu.hidden) alternarFab(); }
+    document.addEventListener("keydown", e => { if (e.key === "Escape") fecharFab(); });
 </script>

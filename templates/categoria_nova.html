@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova categoria — Meus Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="app tela-cheia">
+
+<form method="POST" class="nova-form form-padrao">
+    <header class="nova-topo">
+        <a href="{{ url_for('categorias') }}" class="icone-btn" aria-label="Fechar">
+            <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </a>
+        <h1>Nova categoria</h1>
+        <span></span>
+    </header>
+
+    <main>
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria_msg, texto in mensagens %}
+            <div class="flash {{ categoria_msg }}" role="status">{{ texto }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <label for="nome-cat">Nome da categoria</label>
+    <input type="text" id="nome-cat" name="nome" maxlength="30" placeholder="Ex.: Pets, Viagem..." autofocus required>
+    </main>
+
+    <div class="nova-rodape" style="margin-top:auto">
+        <button type="submit" class="btn-principal btn-full">Salvar</button>
+    </div>
+</form>
+
+</div>
+</body>
+</html>

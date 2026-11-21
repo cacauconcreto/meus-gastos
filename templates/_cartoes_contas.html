@@ -1,36 +1,24 @@
 <div class="cartoes-wrap">
-    <button type="button" class="cartoes-seta esq" id="cartoes-esq" aria-label="Cartão anterior">‹</button>
-    <button type="button" class="cartoes-seta dir" id="cartoes-dir" aria-label="Próximo cartão">›</button>
+    <button type="button" class="cartoes-seta esq" id="cartoes-esq" aria-label="Conta anterior">‹</button>
+    <button type="button" class="cartoes-seta dir" id="cartoes-dir" aria-label="Próxima conta">›</button>
 
     <section class="cartoes" id="cartoes" aria-label="Suas contas">
         {% for c in contas_lista %}
-        <article class="cartao cartao-{{ loop.index0 % 4 }}">
-            <div class="cartao-topo">
-                <div>
-                    <strong>{{ c.nome }}</strong>
-                    <span>{{ tipos_conta.get(c.tipo, c.tipo) }}</span>
-                </div>
-                <svg class="cartao-chip" viewBox="0 0 32 24" aria-hidden="true">
-                    <rect x="1" y="1" width="30" height="22" rx="5"/>
-                    <path d="M1 8h30M1 16h30M11 1v22M21 1v22"/>
-                </svg>
+        <article class="cartao cartao-simples">
+            <div class="cs-topo">
+                <strong>{{ c.nome }}</strong>
+                <span>{{ tipos_conta.get(c.tipo, c.tipo) }}</span>
             </div>
-
-            <div class="cartao-saldo">
+            <div class="cs-saldo">
                 <small>Saldo disponível</small>
-                <strong class="{{ 'negativo' if c.saldo < 0 }}">{{ "−" if c.saldo < 0 }}R$ {{ c.saldo|abs|brl }}</strong>
-            </div>
-
-            <div class="cartao-rodape">
-                <small>Titular</small>
-                <span>{{ usuario["nome"] }}</span>
+                <strong class="{{ 'neg' if c.saldo < 0 }}">{{ "−" if c.saldo < 0 }}R$ {{ c.saldo|abs|brl }}</strong>
             </div>
         </article>
         {% endfor %}
 
         <a class="cartao cartao-novo" href="{{ url_for('contas') }}#nova-conta" draggable="false">
             <span class="mais-icone" aria-hidden="true">+</span>
-            <strong>Adicionar conta</strong>
+            <strong>Adicionar</strong>
         </a>
     </section>
 </div>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planejamento mensal — Meus Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="app tela-cheia">
+
+<form method="POST" class="nova-form">
+    <header class="nova-topo">
+        <a href="{{ url_for('planejamento') }}" class="icone-btn" aria-label="Fechar">
+            <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </a>
+        <h1>Planejamento mensal</h1>
+        <span></span>
+    </header>
+
+    <main>
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria_msg, texto in mensagens %}
+            <div class="flash {{ categoria_msg }}" role="status">{{ texto }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="plano-bloco">
+        <label for="renda">Quanto você ganha por mês?</label>
+        <div class="valor-linha tipo-transferencia">
+            <span>R$</span>
+            <input type="number" id="renda" name="renda" step="0.01" min="0.01" inputmode="decimal"
+                   placeholder="0,00" value="{{ '%.2f'|format(plano['renda']) if plano }}" required autofocus>
+        </div>
+    </div>
+
+    <div class="plano-bloco">
+        <label for="economia">E quanto você quer economizar por mês?</label>
+        <p class="dica" style="margin:0 0 6px">Essa porcentagem será usada para calcular seu orçamento mensal de gastos.</p>
+        <div class="valor-linha tipo-transferencia">
+            <input type="number" id="economia" name="economia" step="1" min="0" max="99" inputmode="numeric"
+                   value="{{ '%.0f'|format(plano['economia_pct']) if plano else 20 }}" style="max-width:110px" required>
+            <span>%</span>
+        </div>
+    </div>
+
+    <div class="plano-resumo">
+        <p>Seu orçamento mensal de gastos será:</p>
+        <strong id="orcamento">R$ 0,00</strong>
+        <p style="margin-top:14px">E você economizará mensalmente:</p>
+        <strong id="economizado" class="verde-txt">R$ 0,00</strong>
+    </div>
+    </main>
+
+    <div class="nova-rodape" style="margin-top:auto">
+        <button type="submit" class="btn-principal btn-full">Continuar →</button>
+    </div>
+</form>
+
+</div>
+
+<script>
+    const renda = document.getElementById("renda");
+    const pct = document.getElementById("economia");
+    const fmt = v => "R$ " + v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    function calcular() {
+        const r = parseFloat(renda.value) || 0;
+        const p = Math.min(Math.max(parseFloat(pct.value) || 0, 0), 99);
+        const guardar = r * p / 100;
+        document.getElementById("orcamento").textContent = fmt(r - guardar);
+        document.getElementById("economizado").textContent = fmt(guardar);
+    }
+    renda.addEventListener("input", calcular);
+    pct.addEventListener("input", calcular);
+    calcular();
+</script>
+</body>
+</html>

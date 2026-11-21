@@ -5,6 +5,8 @@ from datetime import date
 
 BANCO = os.environ.get("BANCO_PATH", "banco.db")
 
+CATEGORIAS_PADRAO = ["Alimentação", "Transporte", "Casa", "Educação", "Saúde", "Lazer", "Outros"]
+
 
 def conectar():
     conexao = sqlite3.connect(BANCO)
@@ -38,10 +40,14 @@ def criar_banco():
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         )""")
 
-    # Migração: marca transações geradas automaticamente (ex.: salário)
+    # Migrações: colunas extras em transacoes
     colunas = [col["name"] for col in c.execute("PRAGMA table_info(transacoes)")]
     if "origem" not in colunas:
         c.execute("ALTER TABLE transacoes ADD COLUMN origem TEXT")
+    if "subcategoria" not in colunas:
+        c.execute("ALTER TABLE transacoes ADD COLUMN subcategoria TEXT")
+    if "observacao" not in colunas:
+        c.execute("ALTER TABLE transacoes ADD COLUMN observacao TEXT")
 
     c.execute("""
         CREATE TABLE IF NOT EXISTS contas (
@@ -85,6 +91,42 @@ def criar_banco():
             FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
         )""")
 
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS categorias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL,
+            nome TEXT NOT NULL,
+            UNIQUE (usuario_id, nome),
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )""")
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS subcategorias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            categoria_id INTEGER NOT NULL,
+            nome TEXT NOT NULL,
+            UNIQUE (categoria_id, nome),
+            FOREIGN KEY (categoria_id) REFERENCES categorias(id)
+        )""")
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS transferencias (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL,
+            origem TEXT NOT NULL,
+            destino TEXT NOT NULL,
+            valor REAL NOT NULL,
+            data TEXT NOT NULL,
+            observacao TEXT,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )""")
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS plano (
+            usuario_id INTEGER PRIMARY KEY,
+            renda REAL NOT NULL,
+            economia_pct REAL NOT NULL,
+            FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        )""")
+
     conexao.commit()
     conexao.close()
 
@@ -115,16 +157,16 @@ def buscar_usuario_email(email):
 
 # ------------------------------------------------------- transações
 
-def adicionar_transacao(usuario_id, tipo, descricao, valor, categoria, conta, data, origem=None):
+def adicionar_transacao(usuario_id, tipo, descricao, valor, categoria, conta, data,
+                        subcategoria=None, origem=None, observacao=None):
     conexao = conectar()
     conexao.execute("""
         INSERT INTO transacoes
-        (usuario_id, tipo, descricao, valor, categoria, conta, data, origem)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (usuario_id, tipo, descricao, valor, categoria, conta, data, origem))
+        (usuario_id, tipo, descricao, valor, categoria, subcategoria, conta, data, origem, observacao)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (usuario_id, tipo, descricao, valor, categoria, subcategoria, conta, data, origem, observacao))
     conexao.commit()
     conexao.close()
-
 
 def buscar_transacoes(usuario_id):
     conexao = conectar()
@@ -177,14 +219,18 @@ def listar_contas(usuario_id):
 
     linhas = conexao.execute("""
         SELECT c.id, c.nome, c.tipo, c.saldo_inicial,
-               c.saldo_inicial + COALESCE(SUM(
-                   CASE t.tipo WHEN 'receita' THEN t.valor
-                               WHEN 'despesa' THEN -t.valor END), 0) AS saldo
+               c.saldo_inicial
+               + COALESCE((SELECT SUM(CASE t.tipo WHEN 'receita' THEN t.valor
+                                                  WHEN 'despesa' THEN -t.valor END)
+                           FROM transacoes t
+                           WHERE t.usuario_id = c.usuario_id AND t.conta = c.nome), 0)
+               + COALESCE((SELECT SUM(x.valor) FROM transferencias x
+                           WHERE x.usuario_id = c.usuario_id AND x.destino = c.nome), 0)
+               - COALESCE((SELECT SUM(x.valor) FROM transferencias x
+                           WHERE x.usuario_id = c.usuario_id AND x.origem = c.nome), 0) AS saldo
         FROM contas c
-        LEFT JOIN transacoes t
-               ON t.usuario_id = c.usuario_id AND t.conta = c.nome
         WHERE c.usuario_id = ?
-        GROUP BY c.id ORDER BY c.nome
+        ORDER BY c.nome
     """, (usuario_id,)).fetchall()
     conexao.close()
     return linhas
@@ -222,6 +268,9 @@ def excluir_conta(usuario_id, conta_id):
     em_uso = em_uso or conexao.execute(
         "SELECT 1 FROM despesas_fixas WHERE usuario_id = ? AND conta = ?",
         (usuario_id, conta["nome"])).fetchone()
+    em_uso = em_uso or conexao.execute(
+        "SELECT 1 FROM transferencias WHERE usuario_id = ? AND (origem = ? OR destino = ?)",
+        (usuario_id, conta["nome"], conta["nome"])).fetchone()
     if em_uso:
         conexao.close()
         return "em_uso"
@@ -369,3 +418,121 @@ def pagar_fixa(usuario_id, fixa, hoje=None):
         usuario_id, "despesa", fixa["descricao"], fixa["valor"], fixa["categoria"],
         fixa["conta"], hoje.isoformat(), origem=f"fixa:{fixa['id']}:{chave}")
     return True
+
+
+# ------------------------------------------- categorias e subcategorias
+
+def listar_categorias(usuario_id):
+    """[{'id', 'nome', 'subs': [{'id', 'nome'}]}]
+    Na primeira vez, cria as categorias padrão para o usuário."""
+    con = conectar()
+    if con.execute(
+            "SELECT 1 FROM categorias WHERE usuario_id = ? LIMIT 1", (usuario_id,)).fetchone() is None:
+        con.executemany(
+            "INSERT OR IGNORE INTO categorias (usuario_id, nome) VALUES (?, ?)",
+            [(usuario_id, n) for n in CATEGORIAS_PADRAO])
+        con.commit()
+
+    cats = [dict(c) for c in con.execute(
+        "SELECT id, nome FROM categorias WHERE usuario_id = ? ORDER BY nome COLLATE NOCASE",
+        (usuario_id,))]
+    for c in cats:
+        c["subs"] = [dict(s) for s in con.execute(
+            "SELECT id, nome FROM subcategorias WHERE categoria_id = ? ORDER BY nome COLLATE NOCASE",
+            (c["id"],))]
+    con.close()
+    return cats
+
+
+def criar_categoria(usuario_id, nome):
+    con = conectar()
+    try:
+        con.execute("INSERT INTO categorias (usuario_id, nome) VALUES (?, ?)", (usuario_id, nome))
+        con.commit()
+        return True
+    except sqlite3.IntegrityError:      # nome repetido
+        return False
+    finally:
+        con.close()
+
+
+def excluir_categoria(usuario_id, categoria_id):
+    """Retorna 'ok', 'em_uso' ou 'nao_encontrada'."""
+    con = conectar()
+    cat = con.execute(
+        "SELECT nome FROM categorias WHERE id = ? AND usuario_id = ?",
+        (categoria_id, usuario_id)).fetchone()
+    if cat is None:
+        con.close()
+        return "nao_encontrada"
+
+    em_uso = con.execute(
+        "SELECT 1 FROM transacoes WHERE usuario_id = ? AND categoria = ? LIMIT 1",
+        (usuario_id, cat["nome"])).fetchone()
+    em_uso = em_uso or con.execute(
+        "SELECT 1 FROM despesas_fixas WHERE usuario_id = ? AND categoria = ? LIMIT 1",
+        (usuario_id, cat["nome"])).fetchone()
+    if em_uso:
+        con.close()
+        return "em_uso"
+
+    con.execute("DELETE FROM subcategorias WHERE categoria_id = ?", (categoria_id,))
+    con.execute("DELETE FROM categorias WHERE id = ?", (categoria_id,))
+    con.commit()
+    con.close()
+    remover_limite(usuario_id, cat["nome"])
+    return "ok"
+
+
+def criar_subcategoria(usuario_id, categoria_id, nome):
+    con = conectar()
+    dono = con.execute(
+        "SELECT 1 FROM categorias WHERE id = ? AND usuario_id = ?",
+        (categoria_id, usuario_id)).fetchone()
+    if dono is None:
+        con.close()
+        return False
+    try:
+        con.execute(
+            "INSERT INTO subcategorias (categoria_id, nome) VALUES (?, ?)", (categoria_id, nome))
+        con.commit()
+        return True
+    except sqlite3.IntegrityError:
+        return False
+    finally:
+        con.close()
+
+
+def excluir_subcategoria(usuario_id, sub_id):
+    con = conectar()
+    con.execute("""
+        DELETE FROM subcategorias WHERE id = ? AND categoria_id IN
+        (SELECT id FROM categorias WHERE usuario_id = ?)""", (sub_id, usuario_id))
+    con.commit()
+    con.close()
+
+def criar_transferencia(usuario_id, origem, destino, valor, data, observacao=None):
+    conexao = conectar()
+    conexao.execute("""
+        INSERT INTO transferencias (usuario_id, origem, destino, valor, data, observacao)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (usuario_id, origem, destino, valor, data, observacao))
+    conexao.commit()
+    conexao.close()
+
+def buscar_plano(usuario_id):
+    con = conectar()
+    p = con.execute("SELECT * FROM plano WHERE usuario_id = ?", (usuario_id,)).fetchone()
+    con.close()
+    return p
+
+
+def salvar_plano(usuario_id, renda, economia_pct):
+    con = conectar()
+    con.execute("""
+        INSERT INTO plano (usuario_id, renda, economia_pct) VALUES (?, ?, ?)
+        ON CONFLICT(usuario_id) DO UPDATE SET
+            renda = excluded.renda, economia_pct = excluded.economia_pct
+    """, (usuario_id, renda, economia_pct))
+    con.commit()
+    con.close()

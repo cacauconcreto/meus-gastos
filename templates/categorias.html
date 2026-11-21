@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categorias — My Expenses</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="app">
+
+{% set topo_sub = 'Organização' %}{% set topo_titulo = 'Categorias' %}
+{% include '_topo.html' %}
+
+{% macro icone(nome) %}
+    {%- set n = nome|lower -%}
+    {%- if 'alimen' in n or 'comida' in n or 'mercado' in n or 'restaur' in n -%}
+        <svg viewBox="0 0 24 24"><path d="M7 3v8a2 2 0 0 0 2 2v8"/><path d="M5 3v6a2 2 0 0 0 4 0V3"/><path d="M17 21V3c-2.5 1.5-3 4.5-3 7s1 3 3 3"/></svg>
+    {%- elif 'casa' in n or 'moradia' in n or 'aluguel' in n -%}
+        <svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/></svg>
+    {%- elif 'educa' in n or 'curso' in n or 'escola' in n or 'faculd' in n -%}
+        <svg viewBox="0 0 24 24"><path d="M2 9 12 4l10 5-10 5Z"/><path d="M6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5"/></svg>
+    {%- elif 'lazer' in n or 'divers' in n or 'entreten' in n or 'jogo' in n -%}
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="11" rx="5"/><path d="M7 10.5v4M5 12.5h4"/><path d="M16 11.5h.01M18.5 13.5h.01"/></svg>
+    {%- elif 'saude' in n or 'saúde' in n or 'médic' in n or 'medic' in n or 'farm' in n -%}
+        <svg viewBox="0 0 24 24"><path d="M20.8 5.6a5 5 0 0 0-7.1 0L12 7.3l-1.7-1.7a5 5 0 0 0-7.1 7.1L12 21l8.8-8.3a5 5 0 0 0 0-7.1Z"/></svg>
+    {%- elif 'transp' in n or 'carro' in n or 'uber' in n or 'combust' in n -%}
+        <svg viewBox="0 0 24 24"><path d="M5 17h14v-5l-2-5H7l-2 5Z"/><path d="M5 12h14"/><circle cx="8" cy="17" r="1.5"/><circle cx="16" cy="17" r="1.5"/></svg>
+    {%- elif 'viag' in n or 'férias' in n or 'ferias' in n or 'turismo' in n -%}
+        <svg viewBox="0 0 24 24"><path d="m2 14 20-8-6 16-4-6Z"/><path d="m12 16 10-10"/></svg>
+    {%- elif 'pet' in n or 'animal' in n -%}
+        <svg viewBox="0 0 24 24"><circle cx="6" cy="10" r="1.6"/><circle cx="10" cy="6" r="1.6"/><circle cx="14" cy="6" r="1.6"/><circle cx="18" cy="10" r="1.6"/><path d="M12 12c-3 0-5 2.5-5 4.5 0 1.7 1.4 2.5 3 2.5 1 0 1.3-.5 2-.5s1 .5 2 .5c1.6 0 3-.8 3-2.5 0-2-2-4.5-5-4.5Z"/></svg>
+    {%- elif 'outro' in n -%}
+        <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>
+    {%- else -%}
+        <svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><path d="M7.5 7.5h.01"/></svg>
+    {%- endif -%}
+{% endmacro %}
+
+<main>
+
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% for categoria_msg, texto in mensagens %}
+        <div class="flash {{ categoria_msg }}" role="status">{{ texto }}</div>
+    {% endfor %}
+{% endwith %}
+
+<div class="pagina-header">
+    <span>Controle preciso</span>
+    <h1>Suas categorias</h1>
+</div>
+
+<a href="{{ url_for('nova_categoria') }}" class="cat-nova">
+    <span class="cat-nova-mais">+</span>
+    <span>Nova categoria</span>
+    <b aria-hidden="true">›</b>
+</a>
+
+<section class="cat-grade">
+    {% for c in categorias %}
+    <a href="{{ url_for('categoria_detalhe', categoria_id=c.id) }}" class="cat-card">
+        <span class="cat-icone">{{ icone(c.nome) }}</span>
+        <strong>{{ c.nome }}</strong>
+        <small>
+            {%- if c.subs|length == 0 %}Nenhuma subcategoria
+            {%- elif c.subs|length == 1 %}1 subcategoria
+            {%- else %}{{ c.subs|length }} subcategorias{% endif -%}
+        </small>
+    </a>
+    {% endfor %}
+</section>
+
+</main>
+
+{% include '_menu.html' %}
+{% include '_modal.html' %}
+
+</div>
+</body>
+</html>

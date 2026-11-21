@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova movimentação — Meus Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+{% set titulos = {'receita': 'Receita', 'despesa': 'Despesa', 'transferencia': 'Transferência'} %}
+<div class="app tela-cheia">
+
+<form method="POST"
+      action="{{ url_for('nova_transferencia') if tipo == 'transferencia' else url_for('nova_transacao') }}"
+      class="nova-form tipo-{{ tipo }}">
+    <input type="hidden" name="tipo" value="{{ tipo }}">
+
+    <header class="nova-topo">
+        <a href="{{ url_for('dashboard') }}" class="icone-btn" aria-label="Fechar">
+            <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </a>
+        <h1>{{ titulos[tipo] }}</h1>
+        <span></span>
+    </header>
+
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria_msg, texto in mensagens %}
+            <div class="flash {{ categoria_msg }}" role="status" style="margin:0 20px 12px">{{ texto }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="nova-valor">
+        <label for="valor">Valor da {{ titulos[tipo]|lower }}</label>
+        <div class="valor-linha">
+            <span>R$</span>
+            <input type="number" id="valor" name="valor" step="0.01" min="0.01"
+                   inputmode="decimal" placeholder="0,00" required autofocus>
+        </div>
+    </div>
+
+    <div class="nova-lista">
+
+        <!-- DATA -->
+        <div class="campo-linha">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+            <div class="chips-data">
+                <input type="hidden" name="data" id="campo-data" value="{{ hoje }}">
+                <button type="button" class="chip ativo" data-dia="{{ hoje }}">Hoje</button>
+                <button type="button" class="chip" data-dia="{{ ontem }}">Ontem</button>
+                <button type="button" class="chip" data-dia="outros">Outros</button>
+                <input type="date" id="data-outra" value="{{ hoje }}" hidden aria-label="Escolher data">
+            </div>
+        </div>
+
+        {% if tipo == 'transferencia' %}
+            {% if contas_opcoes|length < 2 %}
+                <p class="dica" style="padding:14px 0">
+                    Você precisa de pelo menos duas contas para transferir.
+                    <a href="{{ url_for('contas') }}#nova-conta" style="color:var(--roxo);font-weight:700">Adicionar conta</a>
+                </p>
+            {% endif %}
+            <div class="campo-linha">
+                <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
+                <select name="origem" aria-label="Sai da conta" required>
+                    {% for c in contas_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="campo-linha">
+                <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
+                <select name="destino" aria-label="Vai para a conta" required>
+                    {% for c in contas_opcoes %}<option value="{{ c }}" {{ 'selected' if loop.index == 2 }}>{{ c }}</option>{% endfor %}
+                </select>
+            </div>
+        {% else %}
+            <div class="campo-linha">
+                <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                <input type="text" name="descricao" placeholder="Descrição" maxlength="80" autocomplete="off" required>
+            </div>
+            <div class="campo-linha">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                <select name="categoria" id="sel-categoria" aria-label="Categoria"
+                        data-modo="chips" data-proximo="#sel-subcategoria" required>
+                    {% for c in categorias_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="campo-linha">
+                <svg viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><path d="M7.5 7.5h.01"/></svg>
+                <select name="subcategoria" id="sel-subcategoria" aria-label="Subcategoria"
+                        data-modo="chips" data-vazio="Subcategoria (opcional)"></select>
+            </div>
+            <div class="campo-linha">
+                <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>
+                <select name="conta" aria-label="Conta" required>
+                    {% for c in contas_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                </select>
+            </div>
+        {% endif %}
+
+        <div class="campo-linha">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+            <input type="text" name="observacao" placeholder="Observações" maxlength="200" autocomplete="off">
+        </div>
+    </div>
+
+    <div class="nova-rodape">
+        <button type="submit" class="btn-principal btn-full">Salvar</button>
+    </div>
+</form>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/seletor.js') }}"></script>
+<script>
+    // Data: Hoje / Ontem / Outros
+    const campoData = document.getElementById("campo-data");
+    const dataOutra = document.getElementById("data-outra");
+    const chips = document.querySelectorAll("[data-dia]");
+
+    chips.forEach(b => b.addEventListener("click", () => {
+        chips.forEach(x => x.classList.remove("ativo"));
+        b.classList.add("ativo");
+        if (b.dataset.dia === "outros") {
+            dataOutra.hidden = false;
+            campoData.value = dataOutra.value;
+            dataOutra.focus();
+            try { dataOutra.showPicker(); } catch (e) {}
+        } else {
+            dataOutra.hidden = true;
+            campoData.value = b.dataset.dia;
+        }
+    }));
+    dataOutra.addEventListener("change", () => { campoData.value = dataOutra.value; });
+
+    {% if tipo != 'transferencia' %}
+    // Subcategorias dependentes da categoria (com criação na hora)
+    const arvore = {{ categorias_arvore | tojson }};
+    const selCat = document.getElementById("sel-categoria");
+    const selSub = document.getElementById("sel-subcategoria");
+
+    function atualizarSubs() {
+        const subs = arvore[selCat.value] || [];
+        selSub.innerHTML = "";
+        selSub.add(new Option("Sem subcategoria", ""));
+        subs.forEach(nome => selSub.add(new Option(nome, nome)));
+        selSub.dataset.titulo = "Subcategoria de " + selCat.value;
+        selSub._atualizar();
+    }
+
+    selSub.dataset.novoTexto = "Nova subcategoria";
+    selSub.criar = async nome => {
+        const r = await fetch("{{ url_for('sub_rapida') }}", {
+            method: "POST",
+            body: new URLSearchParams({ categoria: selCat.value, nome })
+        });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || !j.ok) throw new Error(j.erro || "Não foi possível adicionar.");
+        (arvore[selCat.value] = arvore[selCat.value] || []).push(j.nome);
+        selSub.add(new Option(j.nome, j.nome));
+        return j.nome;
+    };
+
+    selCat.addEventListener("change", atualizarSubs);
+    atualizarSubs();
+    {% endif %}
+</script>
+</body>
+</html>

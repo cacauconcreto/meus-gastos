@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório — Meus Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="app">
+
+{% set topo_sub = 'Análise' %}{% set topo_titulo = 'Relatório' %}
+{% include '_topo.html' %}
+
+<main>
+
+<!-- Mensal / Anual -->
+<nav class="segmento" aria-label="Tipo de relatório">
+    <a href="{{ url_for('relatorio', modo='mensal', aba=aba) }}" class="{{ 'ativo' if modo == 'mensal' }}">Mensal</a>
+    <a href="{{ url_for('relatorio', modo='anual', aba=aba) }}" class="{{ 'ativo' if modo == 'anual' }}">Anual</a>
+</nav>
+
+<!-- Período -->
+<nav class="mes-navegacao" aria-label="Escolher período" style="padding-top:0">
+    <a href="{{ url_for('relatorio', modo=modo, aba=aba, p=anterior) }}" aria-label="Período anterior">‹</a>
+    <strong>{{ titulo }}</strong>
+    {% if proximo %}
+        <a href="{{ url_for('relatorio', modo=modo, aba=aba, p=proximo) }}" aria-label="Próximo período">›</a>
+    {% else %}
+        <a href="#" aria-disabled="true" aria-label="Próximo período">›</a>
+    {% endif %}
+</nav>
+
+<!-- Resumo -->
+<section class="rel-resumo">
+    <div><span>Despesas</span><strong class="valor-despesa">− R$ {{ resumo.despesas|brl }}</strong></div>
+    <div><span>Renda</span><strong class="valor-receita">+ R$ {{ resumo.receitas|brl }}</strong></div>
+    <div class="rel-balanco">
+        <span>Balanço</span>
+        <strong class="{{ 'valor-receita' if resumo.saldo >= 0 else 'valor-despesa' }}">
+            {{ '+' if resumo.saldo >= 0 else '−' }} R$ {{ resumo.saldo|abs|brl }}
+        </strong>
+    </div>
+</section>
+
+<!-- Abas -->
+<nav class="abas" aria-label="Tipo de movimentação">
+    <a href="{{ url_for('relatorio', modo=modo, aba='despesa', p=p) }}" class="{{ 'ativo' if aba == 'despesa' }}">Despesas</a>
+    <a href="{{ url_for('relatorio', modo=modo, aba='receita', p=p) }}" class="{{ 'ativo' if aba == 'receita' }}">Renda</a>
+</nav>
+
+<section class="card">
+{% if itens %}
+    <div class="rel-donut"
+         role="img" aria-label="Gráfico por categoria"
+         style="background: conic-gradient({% for c in itens %}{{ c.cor }} {{ '%.2f'|format(c.inicio) }}% {{ '%.2f'|format(c.fim) }}%{% if not loop.last %}, {% endif %}{% endfor %});">
+        <div class="rel-donut-centro">
+            <strong>R$ {{ total|brl }}</strong>
+            <span>{{ 'em despesas' if aba == 'despesa' else 'em renda' }}</span>
+        </div>
+    </div>
+
+    <div class="rel-lista">
+    {% for c in itens %}
+        <details class="rel-item">
+            <summary>
+                <span class="bolinha" style="background: {{ c.cor }}"></span>
+                <span class="rel-nome">{{ c.nome }}</span>
+                <span class="rel-valor">R$ {{ c.valor|brl }}</span>
+                <span class="rel-pct">{{ '%.1f'|format(c.pct) }}%</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+            </summary>
+            <div class="rel-subs">
+                {% for s in c.subs %}
+                <div class="rel-sub">
+                    <span>{{ s.nome }}</span>
+                    <span>R$ {{ s.valor|brl }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </details>
+    {% endfor %}
+    </div>
+{% else %}
+    <div class="vazio">
+        <strong>Nada por aqui em {{ titulo }}</strong>
+        <span>{{ 'Nenhuma despesa registrada.' if aba == 'despesa' else 'Nenhuma renda registrada.' }}</span>
+    </div>
+{% endif %}
+</section>
+
+</main>
+
+{% include '_menu.html' %}
+{% include '_modal.html' %}
+
+</div>
+</body>
+</html>

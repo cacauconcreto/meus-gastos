@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Despesas fixas — Meus Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="app">
+
+<header class="dashboard-topo">
+    <div class="perfil">
+        <a href="{{ url_for('mais') }}" class="avatar" aria-label="Configurações">{{ usuario["nome"][0].upper() }}</a>
+        <div>
+            <span>Planejamento</span>
+            <strong>Despesas fixas</strong>
+        </div>
+    </div>
+    <div class="acoes-topo">
+        <a href="{{ url_for('planejamento') }}" class="icone-btn" aria-label="Voltar">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        </a>
+    </div>
+</header>
+
+<main>
+
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% for categoria_msg, texto in mensagens %}
+        <div class="flash {{ categoria_msg }}" role="status">{{ texto }}</div>
+    {% endfor %}
+{% endwith %}
+
+<div class="pagina-header">
+    <span>{% if fixas_pendentes %}Ainda a pagar: R$ {{ fixas_pendentes|brl }}{% else %}Todo mês{% endif %}</span>
+    <h1>Despesas fixas</h1>
+</div>
+
+<a href="{{ url_for('nova_fixa') }}" class="btn-principal btn-full"
+   style="text-decoration:none;display:block;text-align:center;margin-bottom:16px">+ Nova despesa fixa</a>
+
+<section class="card">
+    <div class="lista-fixas">
+    {% for f in fixas %}
+        <div class="fixa fixa-{{ f.estado }}">
+            <div class="fixa-data">
+                <strong>{{ '%02d'|format(f.venc.day) }}</strong>
+                <small>dia</small>
+            </div>
+
+            <div class="fixa-info">
+                <strong>{{ f.descricao }}</strong>
+                <span class="meta-txt">{{ f.categoria }} · {{ f.conta }}</span>
+                <span class="status {{ f.estado }}">{{ f.texto }}</span>
+            </div>
+
+            <div class="fixa-direita">
+                <strong class="valor">R$ {{ f.valor|brl }}</strong>
+                <div class="fixa-acoes">
+                    {% if not f.paga %}
+                    <form method="POST" action="{{ url_for('pagar_fixa_rota', fixa_id=f.id) }}">
+                        <button type="submit" class="btn-pequeno">Pagar</button>
+                    </form>
+                    {% endif %}
+                    <form method="POST" action="{{ url_for('apagar_fixa', fixa_id=f.id) }}"
+                          onsubmit="return confirm('Remover {{ f.descricao|e }}? Pagamentos já feitos continuam nas transações.')">
+                        <button type="submit" class="btn-icone-sutil" aria-label="Remover {{ f.descricao }}">×</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="vazio-mini">
+            <strong>Nenhuma despesa fixa</strong>
+            <span>Cadastre o que vence todo mês: Spotify, internet, aluguel...</span>
+        </div>
+    {% endfor %}
+    </div>
+</section>
+
+</main>
+
+{% include '_menu.html' %}
+{% include '_modal.html' %}
+
+</div>
+<script src="{{ url_for('static', filename='js/seletor.js') }}"></script>
+</body>
+</html>

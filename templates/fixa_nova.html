@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nova despesa fixa — Meus Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="app tela-cheia">
+
+<form method="POST" class="nova-form form-padrao">
+    <header class="nova-topo">
+        <a href="{{ url_for('fixas_lista') }}" class="icone-btn" aria-label="Fechar">
+            <svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </a>
+        <h1>Nova despesa fixa</h1>
+        <span></span>
+    </header>
+
+    <main>
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria_msg, texto in mensagens %}
+            <div class="flash {{ categoria_msg }}" role="status">{{ texto }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <label for="fx-desc">Descrição</label>
+    <input type="text" id="fx-desc" name="descricao" maxlength="60" placeholder="Ex.: Spotify" autofocus required>
+
+    <div class="duas-colunas">
+        <div>
+            <label for="fx-valor">Valor (R$)</label>
+            <input type="number" id="fx-valor" name="valor" step="0.01" min="0.01" inputmode="decimal" required>
+        </div>
+        <div>
+            <label for="fx-dia">Vence todo dia</label>
+            <input type="number" id="fx-dia" name="dia" min="1" max="31" placeholder="20" required>
+        </div>
+    </div>
+
+    <div class="duas-colunas">
+        <div>
+            <label for="fx-cat">Categoria</label>
+            <select id="fx-cat" name="categoria">
+                {% for c in categorias_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="fx-conta">Paga pela conta</label>
+            <select id="fx-conta" name="conta">
+                {% for c in contas_opcoes %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <p class="dica">Ao tocar em "Pagar", o valor vira uma despesa do mês na conta escolhida e entra nos limites.</p>
+    </main>
+
+    <div class="nova-rodape" style="margin-top:auto">
+        <button type="submit" class="btn-principal btn-full">Salvar</button>
+    </div>
+</form>
+
+</div>
+</body>
+</html>

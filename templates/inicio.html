@@ -1,278 +1,37 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Meus Gastos</title>
-
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#5224c9">
+    <title>My Expenses</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+<body class="pagina-boasvindas">
 
-<body>
+<main class="bv">
 
-<header class="topo">
-
-    <div class="logo">
-
-        <div class="logo-icon">
-            $
+    <div class="bv-topo">
+        <div class="bv-logo">
+            <img src="{{ url_for('static', filename='img/logo.png') }}" alt="My Expenses"
+                 onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'$',className:'bv-fallback'}))">
         </div>
-
-        <span>Meus Gastos</span>
-
+        <h1>My Expenses</h1>
+        <p>Seu dinheiro, sob controle.</p>
     </div>
 
-    <a href="{{ url_for('cadastro') }}"
-       class="btn-cadastro">
-
-        Criar conta
-
-    </a>
-
-</header>
-
-
-<main class="container">
-
-
-    <!-- CABEÇALHO -->
-
-    <section class="saudacao">
-
-        <div>
-
-            <p class="pequeno">
-                Controle sua vida financeira
-            </p>
-
-            <h1>
-                Seu dinheiro,
-                <span>sob controle.</span>
-            </h1>
-
-            <p class="descricao">
-
-                Organize seus gastos, acompanhe suas receitas
-                e saiba exatamente para onde seu dinheiro está indo.
-
-            </p>
-
-            <a href="{{ url_for('cadastro') }}"
-               class="btn-principal">
-
-                Começar agora →
-
-            </a>
-
-        </div>
-
-    </section>
-
-
-    <!-- CARDS -->
-
-    <section class="resumo">
-
-        <div class="card saldo">
-
-            <span>Saldo em contas</span>
-
-            <strong>
-                R$ 3.284,00
-            </strong>
-
-            <div class="variacao positivo">
-                ↑ 12,4% este mês
-            </div>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="titulo-card">
-
-                <span class="icone verde">
-                    ↑
-                </span>
-
-                Receitas
-
-            </div>
-
-            <strong>
-                R$ 3.000,00
-            </strong>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="titulo-card">
-
-                <span class="icone vermelho">
-                    ↓
-                </span>
-
-                Despesas
-
-            </div>
-
-            <strong>
-                R$ 1.436,00
-            </strong>
-
-        </div>
-
-    </section>
-
-
-    <!-- CATEGORIAS -->
-
-    <section class="categoria-section">
-
-        <div class="section-header">
-
-            <div>
-
-                <p class="pequeno">
-                    Visão geral
-                </p>
-
-                <h2>
-                    Despesas por categoria
-                </h2>
-
-            </div>
-
-            <span class="mes">
-                Novembro
-            </span>
-
-        </div>
-
-
-        <div class="categorias">
-
-
-            <div class="categoria">
-
-                <div class="categoria-nome">
-
-                    <span class="bolinha roxa"></span>
-
-                    <span>Educação</span>
-
-                </div>
-
-                <strong>
-                    R$ 650,00
-                </strong>
-
-            </div>
-
-
-            <div class="categoria">
-
-                <div class="categoria-nome">
-
-                    <span class="bolinha azul"></span>
-
-                    <span>Casa</span>
-
-                </div>
-
-                <strong>
-                    R$ 276,00
-                </strong>
-
-            </div>
-
-
-            <div class="categoria">
-
-                <div class="categoria-nome">
-
-                    <span class="bolinha vermelha"></span>
-
-                    <span>Alimentação</span>
-
-                </div>
-
-                <strong>
-                    R$ 220,00
-                </strong>
-
-            </div>
-
-
-            <div class="categoria">
-
-                <div class="categoria-nome">
-
-                    <span class="bolinha cinza"></span>
-
-                    <span>Outros</span>
-
-                </div>
-
-                <strong>
-                    R$ 290,00
-                </strong>
-
-            </div>
-
-
-        </div>
-
-    </section>
-
-
-    <!-- CTA -->
-
-    <section class="cta">
-
-        <div>
-
-            <h2>
-                Comece a organizar
-                seu dinheiro.
-            </h2>
-
-            <p>
-                Crie sua conta gratuitamente e tenha
-                uma visão mais clara das suas finanças.
-            </p>
-
-        </div>
-
-        <a href="{{ url_for('cadastro') }}"
-           class="btn-branco">
-
-            Criar minha conta
-
-        </a>
-
-    </section>
-
+    <ul class="bv-itens">
+        <li><span>📊</span> Veja para onde seu dinheiro vai</li>
+        <li><span>🎯</span> Planeje o mês com limites</li>
+        <li><span>🏷️</span> Organize por categorias</li>
+    </ul>
+
+    <div class="bv-acoes">
+        <a href="{{ url_for('cadastro') }}" class="bv-btn bv-btn-branco">Criar conta</a>
+        <a href="{{ url_for('login') }}" class="bv-btn bv-btn-vazado">Já tenho conta</a>
+    </div>
 
 </main>
-
-
-<footer>
-
-    © 2026 Meus Gastos
-
-</footer>
-
 
 </body>
 </html>

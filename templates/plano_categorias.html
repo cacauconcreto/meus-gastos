@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limites por categoria — Meus Gastos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+</head>
+<body>
+<div class="app tela-cheia">
+
+<form method="POST" class="nova-form">
+    <header class="nova-topo">
+        <a href="{{ url_for('configurar_plano') }}" class="icone-btn" aria-label="Voltar">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        </a>
+        <h1>Planejamento mensal</h1>
+        <span></span>
+    </header>
+
+    <main>
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+        {% for categoria_msg, texto in mensagens %}
+            <div class="flash {{ categoria_msg }}" role="status">{{ texto }}</div>
+        {% endfor %}
+    {% endwith %}
+
+    <div class="pagina-header">
+        <h1>Hora de planejar!</h1>
+        <span>Preencha os limites de gasto de cada categoria. O orçamento do mês é de <b>R$ {{ orcamento|brl }}</b>.</span>
+    </div>
+
+    <section class="card plano-total">
+        <span>Total categorizado</span>
+        <strong id="categorizado">R$ 0,00</strong>
+        <span id="sem-cat" class="dica" style="margin:0"></span>
+        <div class="barra" style="margin-top:12px"><div class="barra-progresso" id="barra-cat" style="width:0"></div></div>
+    </section>
+
+    <h2 style="font-size:18px;margin:8px 0 12px">Categorias</h2>
+
+    {% for c in cats %}
+    <label class="plano-cat" for="cat-{{ c.id }}">
+        <strong>{{ c.nome }}</strong>
+        <span class="plano-input">
+            R$ <input type="number" id="cat-{{ c.id }}" name="cat_{{ c.id }}" class="lim-input"
+                      step="0.01" min="0" inputmode="decimal" placeholder="0,00"
+                      value="{{ '%.2f'|format(limites[c.nome]) if c.nome in limites }}">
+        </span>
+    </label>
+    {% endfor %}
+    <p class="dica">Para criar ou remover categorias, use a aba <a href="{{ url_for('categorias') }}" style="color:var(--roxo);font-weight:700">Categorias</a>. Deixe em branco para não ter limite.</p>
+    </main>
+
+    <div class="nova-rodape plano-rodape">
+        <div>
+            <span id="rodape-info" class="dica" style="margin:0"></span>
+        </div>
+        <button type="submit" class="btn-principal" id="salvar">Salvar →</button>
+    </div>
+</form>
+
+</div>
+
+<script>
+    const orcamento = {{ orcamento }};
+    const inputs = document.querySelectorAll(".lim-input");
+    const fmt = v => "R$ " + v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    function somar() {
+        const soma = Array.from(inputs).reduce((s, i) => s + (parseFloat(i.value) || 0), 0);
+        const sobra = Math.round((orcamento - soma) * 100) / 100;
+        const estourou = sobra < 0;
+
+        document.getElementById("categorizado").textContent = fmt(soma);
+        document.getElementById("sem-cat").textContent = estourou
+            ? "Passou " + fmt(-sobra) + " do orçamento"
+            : fmt(sobra) + " sem categorização";
+        document.getElementById("rodape-info").textContent = estourou
+            ? "Reduza " + fmt(-sobra) + " para salvar"
+            : fmt(soma) + " de " + fmt(orcamento);
+
+        const barra = document.getElementById("barra-cat");
+        barra.style.width = Math.min(soma / orcamento * 100, 100) + "%";
+        barra.classList.toggle("estourou", estourou);
+        document.getElementById("salvar").disabled = estourou;
+    }
+    inputs.forEach(i => i.addEventListener("input", somar));
+    somar();
+</script>
+</body>
+</html>
